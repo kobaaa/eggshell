@@ -1,0 +1,9 @@
+{:deps
+ {org.clojure/tools.analyzer.jvm {:mvn/version "0.7.2"}
+  kubiq {:git/url "https://github.com/stathissideris/kubiq"
+         :sha "37a9e435176d583a1a369576e9d0b241b4347040"}
+  rakk {:git/url "https://github.com/stathissideris/rakk"
+        :sha "219f7ac2e3375ef0b78285302c1ac93dd70318f5"}}
+ :aliases
+ {:repl {:extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.13"}
+                      cider/cider-nrepl       {:mvn/version "0.17.0"}}}}}
