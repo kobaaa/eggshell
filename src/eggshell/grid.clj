@@ -4,7 +4,7 @@
             [loom.attr :as attr]))
 
 
-(defn init [] (loom/digraph))
+(defn make [] (loom/digraph))
 
 
 (defn set-value [g cell value]
@@ -22,11 +22,29 @@
                   (rakk/set-function cell (eval code))
                   (attr/add-attr cell ::code code))
         edges (incoming-edges g cell)
+        _ (prn edges)
         g     (if (seq edges)
-                (apply loom/remove-edges g cell edges)
+                (apply loom/remove-edges g edges)
                 g)]
 
     (apply loom/add-edges g (for [input inputs] [input cell]))))
+
+
+(defn advance
+  ([g new-inputs]
+   (advance g new-inputs []))
+  ([g new-inputs new-functions]
+   (let [g (reduce (fn [g {:keys [cell code inputs]}]
+                     (set-function g cell code inputs))
+                   g new-functions)]
+     (rakk/advance g new-inputs))))
+
+
+(def graph-atom (atom (make)))
+
+
+(defn mutate! [new-inputs new-functions]
+  (swap! graph-atom advance new-inputs (or new-functions [])))
 
 
 (comment
@@ -36,3 +54,16 @@
                     '(fn [{:keys [a1]}] (* a1 2))
                     [:a1])
       (rakk/init)))
+
+
+(comment
+  (-> (init)
+      (set-value :a1 10)
+      (set-function :a2
+                    '(fn [{:keys [a1]}] (* a1 2))
+                    [:a1])
+      (rakk/init)
+      (advance {:a1 4})
+      (advance {:a1 8} [{:cell   :a2
+                         :inputs [:a1]
+                         :code   '(fn [{:keys [a1]}] (* a1 100))}])))

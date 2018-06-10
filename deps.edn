@@ -3,7 +3,7 @@
   kubiq {:git/url "https://github.com/stathissideris/kubiq"
          :sha "37a9e435176d583a1a369576e9d0b241b4347040"}
   rakk {:git/url "https://github.com/stathissideris/rakk"
-        :sha "99776f24b68fbbf49d3d541ccc945e8eae17c765"}}
+        :sha "737096b9aa6cdc17222b3fd3e8706e03278e049e"}}
  :aliases
  {:repl {:extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.13"}
                       cider/cider-nrepl       {:mvn/version "0.17.0"}}}}}
