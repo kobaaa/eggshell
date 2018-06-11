@@ -1,7 +1,30 @@
 (ns seesaw.gui
   (:require [seesaw.core :as ss]
-            [eggshell.grid :as grid]))
+            [eggshell.grid :as grid]
+            [eggshell.analyze :as analyze]
+            [clojure.string :as str]
+            [clojure.edn :as edn]))
 
+
+(defn set-cell-at! [g [row col] value]
+  (let [cell-id (grid/coords->id row col)]
+    (prn :cell cell-id)
+    (if (str/starts-with? value "(")
+      (let [code (edn/read-string value)
+            ast  (analyze/analyze code)]
+        (swap! g grid/advance {} [{:cell   cell-id
+                                   :inputs (map keyword (analyze/cell-refs ast))
+                                   :code   (analyze/compile ast)}]))
+      (swap! g grid/advance {cell-id (edn/read-string value)} []))))
+
+
+(defn render-value [x]
+  (cond (seq? x)
+        (pr-str (doall x))
+        (nil? x)
+        ""
+        :else
+        (pr-str x)))
 
 
 (defn table-model [g]
@@ -12,7 +35,8 @@
 
     (getRowCount [] 1048576)
 
-    (isCellEditable [row col] false)
+    (isCellEditable [row col]
+      (not= col 0))
 
     (getColumnName [col]
       (if (zero? col)
@@ -23,11 +47,11 @@
       (if (zero? col)
         row
         (let [cell-id (grid/coords->id row (dec col))]
-          (or (grid/value @g (keyword cell-id))
+          (or (render-value (grid/value @g (keyword cell-id)))
               ""))))
 
     (setValueAt [value row col]
-      )
+      (set-cell-at! g [row (dec col)] value))
 
     (getColumnClass [^Integer c]
       (proxy-super getColumnClass c)

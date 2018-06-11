@@ -49,19 +49,41 @@
 (defn mutate! [new-inputs new-functions]
   (swap! graph-atom advance new-inputs (or new-functions [])))
 
-(defn idx->column* [x]
+
+(defn idx->column* [x] ;;TODO this is wrong beyond 702, fix
   (let [rem (mod x 26)
         div (/ x 26)]
     (if (< div 1)
       (str (char (+ 97 x)))
-      (str (char (+ 97 (dec div))) (idx->column rem)))))
+      (str (char (+ 97 (dec div))) (idx->column* rem)))))
+
 
 (def idx->column (memoize idx->column*))
+
 
 (defn coords->id* [row col]
   (keyword (str (idx->column col) row)))
 
-(def coords->id (memoize coords->id))
+
+(def coords->id (memoize coords->id*))
+
+
+(defn ord [c] (- (int c) 96))
+
+
+(defn col->idx [col]
+  (dec
+   (reduce
+    +
+    (map *
+         (map ord (reverse col))
+         (iterate #(* 26 %) 1)))))
+
+
+(defn id->coords [id]
+  (let [[_ col row] (re-find #"([a-z]+)([0-9]+)" (name id))]
+    [row (col->idx col)]))
+
 
 (comment
   (-> (init)
