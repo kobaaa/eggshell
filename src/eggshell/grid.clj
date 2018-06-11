@@ -13,6 +13,10 @@
       (rakk/set-value cell value)))
 
 
+(defn value [g cell]
+  (rakk/value g cell))
+
+
 (defn incoming-edges [g cell]
   (filter #(-> % second (= cell)) (loom/edges g)))
 
@@ -45,6 +49,19 @@
 (defn mutate! [new-inputs new-functions]
   (swap! graph-atom advance new-inputs (or new-functions [])))
 
+(defn idx->column* [x]
+  (let [rem (mod x 26)
+        div (/ x 26)]
+    (if (< div 1)
+      (str (char (+ 97 x)))
+      (str (char (+ 97 (dec div))) (idx->column rem)))))
+
+(def idx->column (memoize idx->column*))
+
+(defn coords->id* [row col]
+  (keyword (str (idx->column col) row)))
+
+(def coords->id (memoize coords->id))
 
 (comment
   (-> (init)
@@ -78,7 +95,9 @@
                     :inputs [:a2]}])))
 
 (comment
+  (mutate! {:a0 20} [])
   (mutate! {:a1 10} [])
   (mutate! {} [{:cell :a2 :code '(fn [{:keys [a1]}] (* 3 a1)) :inputs #{:a1}}])
   (mutate! {} [{:cell :a3 :code '(fn [{:keys [a2]}] (* 3 a2)) :inputs #{:a2}}])
+  (mutate! {:a1 55} [])
   )

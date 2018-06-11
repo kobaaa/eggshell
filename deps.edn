@@ -1,7 +1,6 @@
 {:deps
  {org.clojure/tools.analyzer.jvm {:mvn/version "0.7.2"}
-  kubiq                          {:git/url "https://github.com/stathissideris/kubiq"
-                                  :sha     "37a9e435176d583a1a369576e9d0b241b4347040"}
+  seesaw                         {:mvn/version "1.5.0"}
   rakk                           {:git/url "https://github.com/stathissideris/rakk"
                                   :sha     "d6e569cad23171c39b688a836d03b0c134003dc0"}}
  :aliases
