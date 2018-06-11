@@ -17,14 +17,25 @@
   (rakk/value g cell))
 
 
+(defn function? [g cell]
+  (try
+    (some? (attr/attr g cell :function))
+    (catch Exception _ false)))
+
+
+(defn raw-code [g cell]
+  (attr/attr g cell ::raw-code))
+
+
 (defn incoming-edges [g cell]
   (filter #(-> % second (= cell)) (loom/edges g)))
 
 
-(defn set-function [g cell code inputs]
+(defn set-function [g {:keys [cell code raw-code inputs]}]
   (let [g     (-> g
                   (rakk/set-function cell (eval code))
-                  (attr/add-attr cell ::code code))
+                  (attr/add-attr cell ::code code)
+                  (attr/add-attr cell ::raw-code raw-code))
         edges (incoming-edges g cell)
         g     (if (seq edges)
                 (apply loom/remove-edges g edges)
@@ -37,8 +48,8 @@
   ([g new-inputs]
    (advance g new-inputs []))
   ([g new-inputs new-functions]
-   (let [g (reduce (fn [g {:keys [cell code inputs]}]
-                     (set-function g cell code inputs))
+   (let [g (reduce (fn [g function]
+                     (set-function g function))
                    g new-functions)]
      (rakk/advance g new-inputs (set (mapcat :inputs new-functions))))))
 

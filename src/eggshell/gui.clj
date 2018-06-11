@@ -8,13 +8,13 @@
 
 (defn set-cell-at! [g [row col] value]
   (let [cell-id (grid/coords->id row col)]
-    (prn :cell cell-id)
     (if (str/starts-with? value "(")
       (let [code (edn/read-string value)
             ast  (analyze/analyze code)]
-        (swap! g grid/advance {} [{:cell   cell-id
-                                   :inputs (map keyword (analyze/cell-refs ast))
-                                   :code   (analyze/compile ast)}]))
+        (swap! g grid/advance {} [{:cell     cell-id
+                                   :inputs   (map keyword (analyze/cell-refs ast))
+                                   :raw-code value
+                                   :code     (analyze/compile ast)}]))
       (swap! g grid/advance {cell-id (edn/read-string value)} []))))
 
 
@@ -25,6 +25,22 @@
         ""
         :else
         (pr-str x)))
+
+
+(defn editable-value [g cell]
+  (if (grid/function? g cell)
+    (grid/raw-code g cell)
+    (if-let [v (grid/value g cell)]
+      (pr-str v)
+      nil)))
+
+
+(defn cell-editor [g]
+  (let [text-field (ss/text)]
+    (proxy [javax.swing.DefaultCellEditor] [text-field]
+      (getTableCellEditorComponent [table value is-selected row col]
+        (doto text-field
+          (.setText (editable-value @g (grid/coords->id row (dec col)))))))))
 
 
 (defn table-model [g]
@@ -67,6 +83,7 @@
                     (doto (ss/table :auto-resize :off
                                     :show-grid? true
                                     :model model)
+                      (.setDefaultEditor Object (cell-editor graph-atom))
                       (.setCellSelectionEnabled true)))
                    :on-close :dispose)
          ss/pack!
