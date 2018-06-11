@@ -6,6 +6,19 @@
             [clojure.edn :as edn]))
 
 
+;;TODO error handling
+(defn input->value [s]
+  (let [r (try (edn/read-string s)
+               (catch Exception _ ::could-not-read))]
+    (cond (or (str/starts-with? s "[")
+              (str/starts-with? s "{")
+              (str/starts-with? s "#{")
+              (number? r))
+          r
+          :else
+          s)))
+
+
 (defn set-cell-at! [g [row col] value]
   (let [cell-id (grid/coords->id row col)]
     (if (str/starts-with? value "(")
@@ -15,12 +28,14 @@
                                    :inputs   (map keyword (analyze/cell-refs ast))
                                    :raw-code value
                                    :code     (analyze/compile ast)}]))
-      (swap! g grid/advance {cell-id (edn/read-string value)} []))))
+      (swap! g grid/advance {cell-id (input->value value)} []))))
 
 
 (defn render-value [x]
   (cond (seq? x)
         (pr-str (doall x))
+        (string? x)
+        x
         (nil? x)
         ""
         :else
@@ -31,7 +46,10 @@
   (if (grid/function? g cell)
     (grid/raw-code g cell)
     (if-let [v (grid/value g cell)]
-      (pr-str v)
+      (cond (string? v)
+            v
+            :else
+            (pr-str v))
       nil)))
 
 
