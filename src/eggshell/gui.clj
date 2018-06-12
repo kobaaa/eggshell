@@ -2,6 +2,7 @@
   (:require [seesaw.core :as ss]
             [seesaw.font :as font]
             [seesaw.color :as color]
+            [seesaw.keymap :as keymap]
             [seesaw.dev :as dev]
             [eggshell.grid :as grid]
             [eggshell.analyze :as analyze]
@@ -116,7 +117,9 @@
 
 (defn code-editor []
   (ss/text :id :code-editor
-           :font mono-font))
+           :font mono-font
+           ;;:multi-line? true
+           ))
 
 
 (defn wire! [frame graph-atom table-model]
@@ -125,14 +128,22 @@
     ;;update table when grid graph changes
     (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
 
-    ;;listen for cell selection changes
+    ;;listen for cell selection changes to update code editor
     (table/listen-selection
      grid
      (fn [e]
        (let [[row col] (table/selected-cell grid)
              cell      (grid/coords->id row (dec col))]
          (ss/config! code-editor :text
-                     (editable-value @graph-atom cell)))))))
+                     (editable-value @graph-atom cell)))))
+
+    ;;listen to ENTER to update cell being edited
+    (keymap/map-key code-editor "ENTER"
+                    (fn [_] (prn "You pressed enter!")
+                      (let [[row col] (table/selected-cell grid)]
+                        (set-cell-at! graph-atom
+                                      [row (dec col)]
+                                      (ss/value code-editor)))))))
 
 
 (defn grid-frame [graph-atom]

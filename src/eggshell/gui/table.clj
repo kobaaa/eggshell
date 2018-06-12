@@ -11,6 +11,11 @@
       .getColumnModel
       (.addColumnModelListener
        (proxy [javax.swing.event.TableColumnModelListener] []
+         (columnAdded [e])
+         (columnMarginChanged [e])
+         (columnMoved [e])
+         (columnRemoved [e])
+
          (columnSelectionChanged [e]
            (f e)))))
 
