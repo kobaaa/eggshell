@@ -5,6 +5,7 @@
             [seesaw.dev :as dev]
             [eggshell.grid :as grid]
             [eggshell.analyze :as analyze]
+            [eggshell.gui.table :as table]
             [clojure.string :as str]
             [clojure.edn :as edn]))
 
@@ -118,11 +119,6 @@
            :font mono-font))
 
 
-(defn table-selected-cell [^javax.swing.JTable table]
-  [(.getSelectedRow table)
-   (.getSelectedColumn table)])
-
-
 (defn wire! [frame graph-atom table-model]
   (let [{:keys [code-editor grid]} (ss/group-by-id frame)]
 
@@ -130,23 +126,13 @@
     (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
 
     ;;listen for cell selection changes
-    (let [cell-listener
-          (fn [e]
-            (let [[row col] (table-selected-cell grid)
-                  cell      (grid/coords->id row (dec col))]
-              (ss/config! code-editor :text
-                          (editable-value @graph-atom cell))))]
-
-      ;;this is to detect column selection changes
-      (-> grid
-          .getColumnModel
-          (.addColumnModelListener
-           (proxy [javax.swing.event.TableColumnModelListener] []
-             (columnSelectionChanged [e]
-               (cell-listener e)))))
-
-      ;;this only works when the row changes
-      (ss/listen grid :selection cell-listener))))
+    (table/listen-selection
+     grid
+     (fn [e]
+       (let [[row col] (table/selected-cell grid)
+             cell      (grid/coords->id row (dec col))]
+         (ss/config! code-editor :text
+                     (editable-value @graph-atom cell)))))))
 
 
 (defn grid-frame [graph-atom]
