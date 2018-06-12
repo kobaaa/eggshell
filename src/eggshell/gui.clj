@@ -1,10 +1,14 @@
 (ns seesaw.gui
   (:require [seesaw.core :as ss]
+            [seesaw.font :as font]
             [eggshell.grid :as grid]
             [eggshell.analyze :as analyze]
             [clojure.string :as str]
             [clojure.edn :as edn]))
 
+
+(def mono-font (font/font :name "Monaco" :size 12))
+(def text-font (font/default-font "TextField.font"))
 
 ;;TODO error handling
 (defn input->value [s]
@@ -22,7 +26,7 @@
 (defn set-cell-at! [g [row col] value]
   (let [cell-id (grid/coords->id row col)]
     (if (str/starts-with? value "(")
-      (let [code (edn/read-string value)
+      (let [code (read-string value)
             ast  (analyze/analyze code)]
         (swap! g grid/advance {} [{:cell     cell-id
                                    :inputs   (map keyword (analyze/cell-refs ast))
@@ -57,8 +61,12 @@
   (let [text-field (ss/text)]
     (proxy [javax.swing.DefaultCellEditor] [text-field]
       (getTableCellEditorComponent [table value is-selected row col]
-        (doto text-field
-          (.setText (editable-value @g (grid/coords->id row (dec col)))))))))
+        (let [cell      (grid/coords->id row (dec col))
+              function? (grid/function? g cell)]
+          (doto text-field
+            ;;(.setFont (if function? mono-font text-font))
+            (.setFont mono-font)
+            (.setText (editable-value @g cell))))))))
 
 
 (defn table-model [g]
@@ -102,7 +110,8 @@
                                     :show-grid? true
                                     :model model)
                       (.setDefaultEditor Object (cell-editor graph-atom))
-                      (.setCellSelectionEnabled true)))
+                      (.setCellSelectionEnabled true)
+                      (.setRowHeight 20)))
                    :on-close :dispose)
          ss/pack!
          ss/show!))))
