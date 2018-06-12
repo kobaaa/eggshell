@@ -125,13 +125,28 @@
 
 (defn wire! [frame graph-atom table-model]
   (let [{:keys [code-editor grid]} (ss/group-by-id frame)]
+
+    ;;update table when grid graph changes
     (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
-    (ss/listen grid :selection
-               (fn [e]
-                 (let [[row col] (table-selected-cell grid)
-                       cell      (grid/coords->id row (dec col))]
-                   (ss/config! code-editor :text
-                               (editable-value @graph-atom cell)))))))
+
+    ;;listen for cell selection changes
+    (let [cell-listener
+          (fn [e]
+            (let [[row col] (table-selected-cell grid)
+                  cell      (grid/coords->id row (dec col))]
+              (ss/config! code-editor :text
+                          (editable-value @graph-atom cell))))]
+
+      ;;this is to detect column selection changes
+      (-> grid
+          .getColumnModel
+          (.addColumnModelListener
+           (proxy [javax.swing.event.TableColumnModelListener] []
+             (columnSelectionChanged [e]
+               (cell-listener e)))))
+
+      ;;this only works when the row changes
+      (ss/listen grid :selection cell-listener))))
 
 
 (defn grid-frame [graph-atom]
