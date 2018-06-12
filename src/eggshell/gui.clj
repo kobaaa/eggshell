@@ -1,6 +1,8 @@
 (ns seesaw.gui
   (:require [seesaw.core :as ss]
             [seesaw.font :as font]
+            [seesaw.color :as color]
+            [seesaw.dev :as dev]
             [eggshell.grid :as grid]
             [eggshell.analyze :as analyze]
             [clojure.string :as str]
@@ -99,21 +101,48 @@
       (proxy-super getColumnClass c)
       Object)))
 
+
+(defn table [graph-atom model]
+  (doto (ss/table :id :grid
+                  :auto-resize :off
+                  :show-grid? true
+                  :model model)
+    (.setDefaultEditor Object (cell-editor graph-atom))
+    (.setCellSelectionEnabled true)
+    (.setGridColor (color/color "lightgray"))
+    (.setRowHeight 20)))
+
+
+(defn code-editor []
+  (ss/text :id :code-editor
+           :font mono-font))
+
+
+(defn table-selected-cell [^javax.swing.JTable table]
+  [(.getSelectedRow table)
+   (.getSelectedColumn table)])
+
+
+(defn wire! [frame graph-atom table-model]
+  (let [{:keys [code-editor grid]} (ss/group-by-id frame)]
+    (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
+    (ss/listen grid :selection
+               (fn [e]
+                 (let [[row col] (table-selected-cell grid)
+                       cell      (grid/coords->id row (dec col))]
+                   (ss/config! code-editor :text
+                               (editable-value @graph-atom cell)))))))
+
+
 (defn grid-frame [graph-atom]
-  (let [model (table-model graph-atom)]
-    (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged model)))
-    (ss/invoke-later
-     (-> (ss/frame :title "eggshell"
-                   :content
-                   (ss/scrollable
-                    (doto (ss/table :auto-resize :off
-                                    :show-grid? true
-                                    :model model)
-                      (.setDefaultEditor Object (cell-editor graph-atom))
-                      (.setCellSelectionEnabled true)
-                      (.setRowHeight 20)))
-                   :on-close :dispose)
-         ss/pack!
-         ss/show!))))
+  (let [model (table-model graph-atom)
+        frame (ss/frame :title "eggshell"
+                        :content (ss/border-panel
+                                  :north  (code-editor)
+                                  :center (ss/scrollable (table graph-atom model)))
+                        :on-close :dispose)]
+    (wire! frame graph-atom model)
+    (ss/invoke-later (-> frame ss/pack! ss/show!))))
+
 
 ;;(grid-frame grid/graph-atom)
