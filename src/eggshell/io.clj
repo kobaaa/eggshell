@@ -1,5 +1,5 @@
 (ns eggshell.io)
 
-(defn assert-version [v x]
+(defn assert-version [x v]
   (assert (= v (:eggshell/version x)))
   x)
