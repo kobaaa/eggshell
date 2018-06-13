@@ -4,7 +4,7 @@
             [seesaw.color :as color]
             [seesaw.keymap :as keymap]
             [seesaw.dev :as dev]
-            [eggshell.grid :as grid]
+            [eggshell.graph :as graph]
             [eggshell.analyze :as analyze]
             [eggshell.gui.table :as table]
             [clojure.string :as str]
@@ -28,15 +28,15 @@
 
 
 (defn set-cell-at! [g [row col] value]
-  (let [cell-id (grid/coords->id row col)]
+  (let [cell-id (graph/coords->id row col)]
     (if (str/starts-with? value "(")
       (let [code (read-string value)
             ast  (analyze/analyze code)]
-        (swap! g grid/advance {} [{:cell     cell-id
-                                   :inputs   (map keyword (analyze/cell-refs ast))
-                                   :raw-code value
-                                   :code     (analyze/compile ast)}]))
-      (swap! g grid/advance {cell-id (input->value value)} []))))
+        (swap! g graph/advance {} [{:cell     cell-id
+                                    :inputs   (map keyword (analyze/cell-refs ast))
+                                    :raw-code value
+                                    :code     (analyze/compile ast)}]))
+      (swap! g graph/advance {cell-id (input->value value)} []))))
 
 
 (defn render-value [x]
@@ -51,9 +51,9 @@
 
 
 (defn editable-value [g cell]
-  (if (grid/function? g cell)
-    (grid/raw-code g cell)
-    (if-let [v (grid/value g cell)]
+  (if (graph/function? g cell)
+    (graph/raw-code g cell)
+    (if-let [v (graph/value g cell)]
       (cond (string? v)
             v
             :else
@@ -65,8 +65,8 @@
   (let [text-field (ss/text)]
     (proxy [javax.swing.DefaultCellEditor] [text-field]
       (getTableCellEditorComponent [table value is-selected row col]
-        (let [cell      (grid/coords->id row (dec col))
-              function? (grid/function? g cell)]
+        (let [cell      (graph/coords->id row (dec col))
+              function? (graph/function? g cell)]
           (doto text-field
             ;;(.setFont (if function? mono-font text-font))
             (.setFont mono-font)
@@ -87,13 +87,13 @@
     (getColumnName [col]
       (if (zero? col)
         ""
-        (grid/idx->column (dec col))))
+        (graph/idx->column (dec col))))
 
     (getValueAt [row col]
       (if (zero? col)
         row
-        (let [cell-id (grid/coords->id row (dec col))]
-          (or (render-value (grid/value @g (keyword cell-id)))
+        (let [cell-id (graph/coords->id row (dec col))]
+          (or (render-value (graph/value @g (keyword cell-id)))
               ""))))
 
     (setValueAt [value row col]
@@ -133,7 +133,7 @@
      grid
      (fn [e]
        (let [[row col] (table/selected-cell grid)
-             cell      (grid/coords->id row (dec col))]
+             cell      (graph/coords->id row (dec col))]
          (ss/config! code-editor :text
                      (editable-value @graph-atom cell)))))
 
@@ -157,4 +157,4 @@
     (ss/invoke-later (-> frame ss/pack! ss/show!))))
 
 
-;;(grid-frame grid/graph-atom)
+;;(grid-frame graph/graph-atom)

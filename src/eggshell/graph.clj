@@ -1,4 +1,4 @@
-(ns eggshell.grid
+(ns eggshell.graph
   (:require [rakk.core :as rakk]
             [loom.graph :as loom]
             [loom.attr :as attr]))
@@ -94,6 +94,14 @@
 (defn id->coords [id]
   (let [[_ col row] (re-find #"([a-z]+)([0-9]+)" (name id))]
     [row (col->idx col)]))
+
+
+(defn strip-extras [g]
+  (reduce (fn [g node]
+            (-> g
+                (attr/remove-attr node ::code)
+                (attr/remove-attr node :function)))
+          g (loom/nodes g)))
 
 
 (comment
