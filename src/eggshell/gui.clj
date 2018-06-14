@@ -6,6 +6,7 @@
             [seesaw.dev :as dev]
             [eggshell.graph :as graph]
             [eggshell.analyze :as analyze]
+            [eggshell.controller :as controller]
             [eggshell.gui.table :as table]
             [clojure.string :as str]
             [clojure.edn :as edn]))
@@ -13,31 +14,6 @@
 
 (def mono-font (font/font :name "Monaco" :size 12))
 (def text-font (font/default-font "TextField.font"))
-
-
-;;TODO error handling
-(defn input->value [s]
-  (let [r (try (edn/read-string s)
-               (catch Exception _ ::could-not-read))]
-    (cond (or (str/starts-with? s "[")
-              (str/starts-with? s "{")
-              (str/starts-with? s "#{")
-              (number? r))
-          r
-          :else
-          s)))
-
-
-(defn set-cell-at! [g [row col] value]
-  (let [cell-id (graph/coords->id row col)]
-    (if (str/starts-with? value "(")
-      (let [code (read-string value)
-            ast  (analyze/analyze code)]
-        (swap! g graph/advance {} [{:cell     cell-id
-                                    :inputs   (map keyword (analyze/cell-refs ast))
-                                    :raw-code value
-                                    :code     (analyze/compile ast)}]))
-      (swap! g graph/advance {cell-id (input->value value)} []))))
 
 
 (defn render-value [x]
@@ -98,7 +74,7 @@
               ""))))
 
     (setValueAt [value row col]
-      (set-cell-at! g [row (dec col)] value))
+      (controller/set-cell-at! g [row (dec col)] value))
 
     (getColumnClass [^Integer c]
       (proxy-super getColumnClass c)
@@ -140,11 +116,11 @@
 
     ;;listen to ENTER to update cell being edited
     (keymap/map-key code-editor "ENTER"
-                    (fn [_] (prn "You pressed enter!")
+                    (fn [_]
                       (let [[row col] (table/selected-cell grid)]
-                        (set-cell-at! graph-atom
-                                      [row (dec col)]
-                                      (ss/value code-editor)))))))
+                        (controller/set-cell-at! graph-atom
+                                                 [row (dec col)]
+                                                 (ss/value code-editor)))))))
 
 
 (defn grid-frame [graph-atom]

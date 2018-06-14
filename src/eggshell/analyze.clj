@@ -5,8 +5,8 @@
             [clojure.tools.analyzer.jvm :as ana.jvm]
             [clojure.tools.analyzer.passes.jvm.emit-form :refer [emit-form]]))
 
-(set! *print-length* 20)
-(set! *print-level* 6)
+;; (set! *print-length* 20)
+;; (set! *print-level* 6)
 
 (defn cell-ref-sym?
   "Does the symbol look like a cell reference?"
