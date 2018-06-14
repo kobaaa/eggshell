@@ -4,8 +4,8 @@ A Clojure-driven spreadsheet
 
 ## TODO
 
-- [ ] Saving
-- [ ] Loading
+- [x] Saving
+- [x] Loading
 - [ ] main function and package as a jar
 - [ ] better editing UI (multi-line editor, some structural editing)
 - [ ] error handling in cells (and GUI to diplay stacktraces)
@@ -18,6 +18,7 @@ A Clojure-driven spreadsheet
 - [ ] some meta madness like spreadsheet-in-a-cell
 - [ ] export spreadsheet as some sort of Clojure code
 - [ ] named cells?
+- [ ] save/load column widths
 
 ## License
 

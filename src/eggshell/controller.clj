@@ -22,12 +22,16 @@
   (reduce compile-function g (loom/nodes g)))
 
 
-(defn load-eggshell [filename]
-  (->> (io/load-eggshell filename)
+(defn load-egg [filename]
+  (->> (io/load-egg filename)
        :eggshell/graph
        compile-functions
        (reset! graph/graph-atom))
   nil)
+
+
+(defn save-egg [filename]
+  (io/save-egg @graph/graph-atom filename))
 
 
 ;;TODO error handling

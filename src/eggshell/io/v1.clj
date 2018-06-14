@@ -13,14 +13,14 @@
           g (loom/nodes g)))
 
 
-(defn save-eggshell [g filename]
+(defn save-egg [g filename]
   (spit filename
         {:eggshell/file-type "eggshell spreadsheet"
          :eggshell/version   "v1"
          :eggshell/graph     (into {} (strip-extras g))}))
 
 
-(defn load-eggshell [filename]
+(defn load-egg [filename]
   (-> filename
       slurp
       edn/read-string

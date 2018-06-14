@@ -3,6 +3,7 @@
             [seesaw.font :as font]
             [seesaw.color :as color]
             [seesaw.keymap :as keymap]
+            [seesaw.chooser :as chooser]
             [seesaw.dev :as dev]
             [eggshell.graph :as graph]
             [eggshell.analyze :as analyze]
@@ -123,16 +124,37 @@
                                                  (ss/value code-editor)))))))
 
 
+(defn- toolbar []
+  (ss/flow-panel
+   :align :left
+   :items
+   [(ss/button :text "Load"
+               :listen
+               [:action
+                (fn [_]
+                  (when-let [file (chooser/choose-file)]
+                    (controller/load-egg file)))])
+    (ss/button :text "Save"
+               :listen
+               [:action
+                (fn [_]
+                  (when-let [file (chooser/choose-file :type :save)]
+                    (controller/save-egg file)))])]))
+
+
 (defn grid-frame [graph-atom]
   (let [model (table-model graph-atom)
         frame (ss/frame :title "eggshell"
                         :content (ss/border-panel
-                                  :north  (code-editor)
-                                  :center (ss/scrollable (table graph-atom model)))
+                                  :north (toolbar)
+                                  :center
+                                  (ss/border-panel
+                                   :north  (code-editor)
+                                   :center (ss/scrollable (table graph-atom model))))
                         :on-close :dispose)]
     (wire! frame graph-atom model)
     (ss/invoke-later (-> frame ss/pack! ss/show!))))
 
 
 ;;(grid-frame graph/graph-atom)
-;;(eggshell.controller/load-eggshell "test-resources/first.egg")
+;;(eggshell.controller/load-egg "test-resources/first.egg")
