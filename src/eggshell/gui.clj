@@ -1,4 +1,4 @@
-(ns seesaw.gui
+(ns eggshell.gui
   (:require [seesaw.core :as ss]
             [seesaw.font :as font]
             [seesaw.color :as color]
@@ -13,6 +13,7 @@
 
 (def mono-font (font/font :name "Monaco" :size 12))
 (def text-font (font/default-font "TextField.font"))
+
 
 ;;TODO error handling
 (defn input->value [s]
@@ -158,3 +159,4 @@
 
 
 ;;(grid-frame graph/graph-atom)
+;;(eggshell.controller/load-eggshell "test-resources/first.egg")

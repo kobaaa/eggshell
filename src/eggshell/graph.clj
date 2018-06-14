@@ -31,16 +31,19 @@
   (filter #(-> % second (= cell)) (loom/edges g)))
 
 
-(defn set-function [g {:keys [cell code raw-code inputs]}]
-  (let [g     (-> g
-                  (rakk/set-function cell (eval code))
-                  (attr/add-attr cell ::code code)
-                  (attr/add-attr cell ::raw-code raw-code))
+(defn set-function [g {:keys [cell code raw-code]}]
+  (-> g
+      (rakk/set-function cell (eval code))
+      (attr/add-attr cell ::code code)
+      (attr/add-attr cell ::raw-code raw-code)))
+
+
+(defn set-function-and-connect [g {:keys [cell inputs] :as fun}]
+  (let [g     (set-function g fun)
         edges (incoming-edges g cell)
         g     (if (seq edges)
                 (apply loom/remove-edges g edges)
                 g)]
-
     (apply loom/add-edges g (for [input inputs] [input cell]))))
 
 
@@ -49,7 +52,7 @@
    (advance g new-inputs []))
   ([g new-inputs new-functions]
    (let [g (reduce (fn [g function]
-                     (set-function g function))
+                     (set-function-and-connect g function))
                    g new-functions)]
      (rakk/advance g new-inputs (set (mapcat :inputs new-functions))))))
 
@@ -96,29 +99,23 @@
     [row (col->idx col)]))
 
 
-(defn strip-extras [g]
-  (reduce (fn [g node]
-            (-> g
-                (attr/remove-attr node ::code)
-                (attr/remove-attr node :function)))
-          g (loom/nodes g)))
-
-
 (comment
   (-> (init)
       (set-value :a1 10)
-      (set-function :a2
-                    '(fn [{:keys [a1]}] (* a1 2))
-                    [:a1])
+      (set-function-and-connect
+       :a2
+       '(fn [{:keys [a1]}] (* a1 2))
+       [:a1])
       (rakk/init)))
 
 
 (comment
   (-> (init)
       (set-value :a1 10)
-      (set-function :a2
-                    '(fn [{:keys [a1]}] (* a1 2))
-                    [:a1])
+      (set-function-and-connect
+       :a2
+       '(fn [{:keys [a1]}] (* a1 2))
+       [:a1])
       (rakk/init)
       (advance {:a1 4})
       (advance {:a1 8} [{:cell   :a2
