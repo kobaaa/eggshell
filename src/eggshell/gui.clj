@@ -9,6 +9,7 @@
             [eggshell.analyze :as analyze]
             [eggshell.controller :as controller]
             [eggshell.gui.table :as table]
+            [eggshell.state :as state]
             [clojure.string :as str]
             [clojure.edn :as edn]))
 
@@ -101,7 +102,7 @@
 
 
 (defn wire! [frame graph-atom table-model]
-  (let [{:keys [code-editor grid]} (ss/group-by-id frame)]
+  (let [{:keys [code-editor grid load-button save-button]} (ss/group-by-id frame)]
 
     ;;update table when grid graph changes
     (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
@@ -121,25 +122,28 @@
                       (let [[row col] (table/selected-cell grid)]
                         (controller/set-cell-at! graph-atom
                                                  [row (dec col)]
-                                                 (ss/value code-editor)))))))
+                                                 (ss/value code-editor)))))
+
+    ;;wire up toolbar buttons
+
+    (ss/listen load-button :action
+               (fn [_]
+                 (when-let [file (chooser/choose-file)]
+                   (controller/load-egg file {:graph-atom state/graph-atom
+                                              :grid       grid}))))
+    (ss/listen save-button :action
+               (fn [_]
+                  (when-let [file (chooser/choose-file :type :save)]
+                    (controller/save-egg file {:graph         @state/graph-atom
+                                               :column-widths (table/column-widths grid)}))))))
 
 
 (defn- toolbar []
   (ss/flow-panel
    :align :left
    :items
-   [(ss/button :text "Load"
-               :listen
-               [:action
-                (fn [_]
-                  (when-let [file (chooser/choose-file)]
-                    (controller/load-egg file)))])
-    (ss/button :text "Save"
-               :listen
-               [:action
-                (fn [_]
-                  (when-let [file (chooser/choose-file :type :save)]
-                    (controller/save-egg file)))])]))
+   [(ss/button :text "Load" :id :load-button)
+    (ss/button :text "Save" :id :save-button)]))
 
 
 (defn grid-frame [graph-atom]
@@ -156,5 +160,5 @@
     (ss/invoke-later (-> frame ss/pack! ss/show!))))
 
 
-;;(grid-frame graph/graph-atom)
+;;(grid-frame state/graph-atom)
 ;;(eggshell.controller/load-egg "test-resources/first.egg")

@@ -5,6 +5,7 @@
   [(.getSelectedRow table)
    (.getSelectedColumn table)])
 
+
 (defn listen-selection [^javax.swing.JTable table f]
   ;;this is to detect column selection changes
   (-> table
@@ -21,3 +22,11 @@
 
   ;;this one only fires when the row changes
   (ss/listen table :selection f))
+
+
+(defn column-widths [^javax.swing.JTable table]
+  (let [model (.getColumnModel table)]
+    (doall
+     (for [idx (range (.getColumnCount model))]
+       (let [col (.getColumn model idx)]
+         (.getWidth col))))))

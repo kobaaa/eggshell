@@ -57,13 +57,6 @@
      (rakk/advance g new-inputs (set (mapcat :inputs new-functions))))))
 
 
-(def graph-atom (atom (make)))
-
-
-(defn mutate! [new-inputs new-functions]
-  (swap! graph-atom advance new-inputs (or new-functions [])))
-
-
 (defn idx->column* [x] ;;TODO this is wrong beyond 702, fix
   (let [rem (mod x 26)
         div (/ x 26)]
