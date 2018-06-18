@@ -1,5 +1,7 @@
 (ns eggshell.graph
-  (:require [rakk.core :as rakk]
+  (:refer-clojure :exclude [range])
+  (:require [clojure.core :as core]
+            [rakk.core :as rakk]
             [loom.graph :as loom]
             [loom.attr :as attr]))
 
@@ -89,7 +91,32 @@
 
 (defn id->coords [id]
   (let [[_ col row] (re-find #"([a-z]+)([0-9]+)" (name id))]
-    [row (col->idx col)]))
+    [(Integer/parseInt row) (col->idx col)]))
+
+
+(defn in-line? [[row1 col1] [row2 col2]]
+  (or (= row1 row2)
+      (= col1 col2)))
+
+
+(defn range [id1 id2]
+  (let [[row1 col1] (id->coords id1)
+        [row2 col2] (id->coords id2)]
+    (cond (= row1 row2)
+          (map (partial apply coords->id)
+               (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+                 [row1 col]))
+
+          (= col1 col2)
+          (map (partial apply coords->id)
+               (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
+                 [row col1]))
+
+          :else
+          (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
+            (map (partial apply coords->id)
+                 (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+                   [row col]))))))
 
 
 (comment
