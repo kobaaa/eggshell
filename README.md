@@ -6,6 +6,7 @@ A Clojure-driven spreadsheet
 
 - [x] Saving
 - [x] Loading
+- [x] Cell ranges in formulas
 - [ ] main function and package as a jar
 - [ ] better editing UI (multi-line editor, some structural editing)
 - [ ] error handling in cells (and GUI to diplay stacktraces)
