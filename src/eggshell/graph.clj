@@ -116,6 +116,23 @@
               (value g (coords->id row col)))))))
 
 
+(defn map-slice [m id1 id2]
+  (let [[row1 col1] (id->coords id1)
+        [row2 col2] (id->coords id2)]
+    (cond (= row1 row2)
+          (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+            (get m (coords->id row1 col)))
+
+          (= col1 col2)
+          (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
+            (get m (coords->id row col1)))
+
+          :else
+          (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
+            (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+              (get m (coords->id row col)))))))
+
+
 (defn slice->ids [id1 id2]
   (let [[row1 col1] (id->coords id1)
         [row2 col2] (id->coords id2)]

@@ -79,7 +79,7 @@
         cell2 (keyword cell2)]
    {:op   :invoke
     :fn   {:op   :var
-           :form 'eggshell.graph/slice}
+           :form 'eggshell.graph/map-slice}
     :args [{:name  'cells
             :op    :local
             :form  'cells
