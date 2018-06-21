@@ -145,14 +145,6 @@
 ;;(compile (analyze '(let [x3 100] (+ x3 x4 x5 100))))
 ;;((eval (compile (analyze '(let [x3 100] (+ x3 x4 x5 100))))) {:x4 4 :x5 2})
 
-;; TODO
-;; if you do:
-;; (-> (analyze '(+ a1 b0:b5)) (compile))
-;;
-;; you'll appreciate that we're not quite ready for ranges yet,
-;; because simple references expect cells to be a map, while slice
-;; references assume it to be a graph
-
 
 ;; TODO
 ;; currently, cells-refs (which is used to figure out the dependencies
