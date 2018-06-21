@@ -100,6 +100,9 @@
 
 
 (defn slice [g id1 id2]
+  "When passed a graph and start and end cells, construct a seq or a
+  seq of seqs (depending on the dimensionality of the slice) of the
+  values of cells in the slice."
   (let [[row1 col1] (id->coords id1)
         [row2 col2] (id->coords id2)]
     (cond (= row1 row2)
@@ -116,7 +119,12 @@
               (value g (coords->id row col)))))))
 
 
-(defn map-slice [m id1 id2]
+(defn map-slice
+  "When passed a map that contains the values of cells (as happens in
+  dataflow), and start and end cells, construct a seq or a seq of
+  seqs (depending on the dimensionality of the slice) of the values in
+  the map."
+  [m id1 id2]
   (let [[row1 col1] (id->coords id1)
         [row2 col2] (id->coords id2)]
     (cond (= row1 row2)
