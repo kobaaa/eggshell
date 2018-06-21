@@ -99,24 +99,30 @@
       (= col1 col2)))
 
 
-(defn range [id1 id2]
+(defn slice [g id1 id2]
   (let [[row1 col1] (id->coords id1)
         [row2 col2] (id->coords id2)]
     (cond (= row1 row2)
-          (map (partial apply coords->id)
-               (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
-                 [row1 col]))
+          (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+            (value g (coords->id row1 col)))
 
           (= col1 col2)
-          (map (partial apply coords->id)
-               (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
-                 [row col1]))
+          (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
+            (value g (coords->id row col1)))
 
           :else
           (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
-            (map (partial apply coords->id)
-                 (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
-                   [row col]))))))
+            (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+              (value g (coords->id row col)))))))
+
+
+(defn slice->ids [id1 id2]
+  (let [[row1 col1] (id->coords id1)
+        [row2 col2] (id->coords id2)]
+    (flatten
+     (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
+       (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
+         (coords->id row col))))))
 
 
 (comment

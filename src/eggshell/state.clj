@@ -9,4 +9,5 @@
                        :filename "my.egg"
                        :aliases  []
                        :deps     {}
-                       :graph    {}})}})
+                       :graph    {}
+                       :gui      {:column-widths []}})}})
