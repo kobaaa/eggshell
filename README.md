@@ -21,6 +21,10 @@ A Clojure-driven spreadsheet
 - [ ] named cells?
 - [ ] save/load column widths
 
+## Bugs
+
+- [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
+
 ## License
 
 Copyright © 2018 Stathis Sideris

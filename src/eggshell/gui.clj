@@ -1,6 +1,5 @@
 (ns eggshell.gui
   (:require [seesaw.core :as ss]
-            [seesaw.font :as font]
             [seesaw.color :as color]
             [seesaw.keymap :as keymap]
             [seesaw.chooser :as chooser]
@@ -11,14 +10,11 @@
             [eggshell.analyze :as analyze]
             [eggshell.controller :as controller]
             [eggshell.gui.table :as table]
+            [eggshell.gui.code-editor :as code-editor]
+            [eggshell.gui.defaults :as defaults]
             [eggshell.state :as state]
             [clojure.string :as str]
             [clojure.edn :as edn]))
-
-
-(def mono-font (font/font :name "Monaco" :size 12))
-(def text-font (font/default-font "TextField.font"))
-(def selected-color "#b4d8fd")
 
 
 (defn render-value [x]
@@ -52,17 +48,26 @@
 
           (ss/config! text-field
             ;;(.setFont (if function? mono-font text-font))
-            :font mono-font
-            :text (editable-value @g cell)
-            :background-color (if is-selected selected-color :white)))))))
+            :font defaults/mono-font
+            :text (editable-value @g cell)))))))
 
 
-(defn cell-renderer []
+(defn- value-at [g row col]
+  (if (zero? col)
+    row
+    (let [cell-id (graph/coords->id row (dec col))]
+      (or (render-value (graph/value @g (keyword cell-id)))
+          ""))))
+
+
+(defn cell-renderer [g]
   (proxy [javax.swing.table.DefaultTableCellRenderer] []
-    (getTableCellRendererComponent [table value is-selected has-focus row column]
-      (let [c (proxy-super getTableCellRendererComponent table value is-selected has-focus row column)]
+    (getTableCellRendererComponent [table value is-selected has-focus row col]
+      (let [c (proxy-super getTableCellRendererComponent table value is-selected has-focus row col)]
         (doto c
-          (.setBackground (color/color (if is-selected selected-color :white))))))))
+          ;;(.setText (str (value-at g row col)))
+          (.setForeground (color/color :black))
+          (.setBackground (color/color (if is-selected defaults/selected-color :white))))))))
 
 
 (defn table-model [g]
@@ -81,12 +86,7 @@
         ""
         (graph/idx->column (dec col))))
 
-    (getValueAt [row col]
-      (if (zero? col)
-        row
-        (let [cell-id (graph/coords->id row (dec col))]
-          (or (render-value (graph/value @g (keyword cell-id)))
-              ""))))
+    (getValueAt [row col] (value-at g row col))
 
     (setValueAt [value row col]
       (controller/set-cell-at! g [row (dec col)] value))
@@ -101,18 +101,11 @@
                   :auto-resize :off
                   :show-grid? true
                   :model model)
-    (.setDefaultRenderer Object (cell-renderer))
+    (.setDefaultRenderer Object (cell-renderer graph-atom))
     (.setDefaultEditor Object (cell-editor graph-atom))
     (.setCellSelectionEnabled true)
     (.setGridColor (color/color "lightgray"))
     (.setRowHeight 20)))
-
-
-(defn code-editor []
-  (ss/text :id :code-editor
-           :font mono-font
-           ;;:multi-line? true
-           ))
 
 
 (defn wire! [frame graph-atom table-model]
@@ -136,7 +129,13 @@
                       (let [[row col] (table/selected-cell grid)]
                         (controller/set-cell-at! graph-atom
                                                  [row (dec col)]
-                                                 (ss/value code-editor)))))
+                                                 (ss/value code-editor))))
+                    :scope :self)
+
+
+    (keymap/map-key code-editor "control ENTER"
+                    (fn [_] (prn "You pressed ctrl+enter!")))
+
 
     ;;wire up toolbar buttons
 
@@ -167,7 +166,7 @@
                                   :north (toolbar)
                                   :center
                                   (ss/border-panel
-                                   :north  (code-editor)
+                                   :north  (code-editor/code-editor)
                                    :center (ss/scrollable (table graph-atom model))))
                         :on-close :dispose)]
     (wire! frame graph-atom model)
