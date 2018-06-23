@@ -6,7 +6,8 @@
 (defn code-editor []
   (let [border (.getBorder (ss/text))]
     (ss/config!
-     (ss/text :id :code-editor
-              :font defaults/mono-font
+     (ss/text :id          :code-editor
+              :font        defaults/mono-font
+              :editable?   false
               :multi-line? true)
      :border (border/to-border border (border/line-border :color "#eeeeee" :thickness 6)))))

@@ -118,10 +118,16 @@
     (table/listen-selection
      grid
      (fn [e]
-       (let [[row col] (table/selected-cell grid)
-             cell      (graph/coords->id row (dec col))]
-         (ss/config! code-editor :text
-                     (editable-value @graph-atom cell)))))
+       (let [selected (table/selected-cell grid)]
+         (if-not selected
+           (ss/config! code-editor
+                       :text      ""
+                       :editable? false)
+           (let [[row col] selected
+                 cell      (graph/coords->id row (dec col))]
+             (ss/config! code-editor
+                         :text      (editable-value @graph-atom cell)
+                         :editable? true))))))
 
     ;;listen to ENTER to update cell being edited
     (keymap/map-key code-editor "ENTER"
@@ -129,7 +135,8 @@
                       (let [[row col] (table/selected-cell grid)]
                         (controller/set-cell-at! graph-atom
                                                  [row (dec col)]
-                                                 (ss/value code-editor))))
+                                                 (ss/value code-editor))
+                        (table/set-selection! grid [row col])))
                     :scope :self)
 
 
@@ -178,3 +185,4 @@
 
 ;;(grid-frame state/graph-atom)
 ;;(eggshell.controller/load-egg "test-resources/first.egg")
+;;(def tt (ss/select (last (frames)) [:#grid]))
