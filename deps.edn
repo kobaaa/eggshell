@@ -2,7 +2,10 @@
  {org.clojure/tools.analyzer.jvm {:mvn/version "0.7.2"}
   seesaw                         {:mvn/version "1.5.0"}
   rakk                           {:git/url "https://github.com/stathissideris/rakk"
-                                  :sha     "a4b5717086e66989856a45a1f6e5d04628e6aec3"}}
+                                  :sha     "a4b5717086e66989856a45a1f6e5d04628e6aec3"}
+  cross-parinfer                 {:mvn/version "1.4.5"}
+  org.clojure/tools.deps.alpha   {:git/url "https://github.com/clojure/tools.deps.alpha.git"
+                                  :sha     "d492e97259c013ba401c5238842cd3445839d020"}}
  :aliases
  {:repl {:extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.13"}
                       cider/cider-nrepl       {:mvn/version "0.17.0"}}}}}

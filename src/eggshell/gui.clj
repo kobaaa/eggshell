@@ -4,6 +4,8 @@
             [seesaw.color :as color]
             [seesaw.keymap :as keymap]
             [seesaw.chooser :as chooser]
+            [seesaw.border :as border]
+            [seesaw.color :as color]
             [seesaw.dev :as dev]
             [eggshell.graph :as graph]
             [eggshell.analyze :as analyze]
@@ -16,6 +18,7 @@
 
 (def mono-font (font/font :name "Monaco" :size 12))
 (def text-font (font/default-font "TextField.font"))
+(def selected-color "#b4d8fd")
 
 
 (defn render-value [x]
@@ -46,10 +49,20 @@
       (getTableCellEditorComponent [table value is-selected row col]
         (let [cell      (graph/coords->id row (dec col))
               function? (graph/function? g cell)]
-          (doto text-field
+
+          (ss/config! text-field
             ;;(.setFont (if function? mono-font text-font))
-            (.setFont mono-font)
-            (.setText (editable-value @g cell))))))))
+            :font mono-font
+            :text (editable-value @g cell)
+            :background-color (if is-selected selected-color :white)))))))
+
+
+(defn cell-renderer []
+  (proxy [javax.swing.table.DefaultTableCellRenderer] []
+    (getTableCellRendererComponent [table value is-selected has-focus row column]
+      (let [c (proxy-super getTableCellRendererComponent table value is-selected has-focus row column)]
+        (doto c
+          (.setBackground (color/color (if is-selected selected-color :white))))))))
 
 
 (defn table-model [g]
@@ -88,6 +101,7 @@
                   :auto-resize :off
                   :show-grid? true
                   :model model)
+    (.setDefaultRenderer Object (cell-renderer))
     (.setDefaultEditor Object (cell-editor graph-atom))
     (.setCellSelectionEnabled true)
     (.setGridColor (color/color "lightgray"))
@@ -159,6 +173,9 @@
     (wire! frame graph-atom model)
     (ss/invoke-later (-> frame ss/pack! ss/show!))))
 
+
+(defn frames []
+  (java.awt.Frame/getFrames))
 
 ;;(grid-frame state/graph-atom)
 ;;(eggshell.controller/load-egg "test-resources/first.egg")
