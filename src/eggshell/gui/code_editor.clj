@@ -11,3 +11,13 @@
               :editable?   false
               :multi-line? true)
      :border (border/to-border border (border/line-border :color "#eeeeee" :thickness 6)))))
+
+
+(defn insert-new-line! [editor]
+  (let [pos  (.getCaretPosition editor)
+        text (.getText editor)]
+    (doto editor
+      (.setText (str (subs text 0 pos)
+                           "\n"
+                           (subs text pos)))
+      (.setCaretPosition (inc pos)))))

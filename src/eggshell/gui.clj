@@ -141,7 +141,7 @@
 
 
     (keymap/map-key code-editor "control ENTER"
-                    (fn [_] (prn "You pressed ctrl+enter!")))
+                    (fn [_] (code-editor/insert-new-line! code-editor)))
 
 
     ;;wire up toolbar buttons
