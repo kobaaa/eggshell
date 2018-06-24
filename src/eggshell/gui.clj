@@ -181,12 +181,16 @@
     (table/listen-selection
      grid
      (fn [_]
-       (let [[row col] (table/selected-cell grid)
-             cell-id   (graph/coords->id row (dec col))]
-         (ss/value! status-area
-                    {:status-line (status-line-text {:graph   @state/graph-atom
-                                                     :cell-id cell-id})
-                     :error       "No error"}))))
+       (let [[row col] (table/selected-cell grid)]
+         (if (and row col)
+           (let [cell-id   (graph/coords->id row (dec col))]
+             (ss/value! status-area
+                        {:status-line (status-line-text {:graph   @state/graph-atom
+                                                         :cell-id cell-id})
+                         :error       "No errors"}))
+           (ss/value! status-area
+                      {:status-line "No selection"
+                       :error       "No errors"})))))
 
     (ss/listen status-line :mouse-clicked
                (fn [_]
