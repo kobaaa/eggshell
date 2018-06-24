@@ -108,8 +108,13 @@
     (.setRowHeight 20)))
 
 
+(defn- status-line-text [{:keys [graph cell-id]}]
+  (str
+   (name cell-id)
+   (when (graph/function? graph cell-id) ", function")))
+
 (defn wire! [frame graph-atom table-model]
-  (let [{:keys [code-editor grid load-button save-button]} (ss/group-by-id frame)]
+  (let [{:keys [code-editor grid load-button save-button status-line]} (ss/group-by-id frame)]
 
     ;;update table when grid graph changes
     (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
@@ -117,7 +122,7 @@
     ;;listen for cell selection changes to update code editor
     (table/listen-selection
      grid
-     (fn [e]
+     (fn [_]
        (let [selected (table/selected-cell grid)]
          (if-not selected
            (ss/config! code-editor
@@ -155,7 +160,17 @@
                (fn [_]
                   (when-let [file (chooser/choose-file :type :save)]
                     (controller/save-egg file {:graph         @state/graph-atom
-                                               :column-widths (table/column-widths grid)}))))))
+                                               :column-widths (table/column-widths grid)}))))
+
+    ;;wire up status line
+    (table/listen-selection
+     grid
+     (fn [_]
+       (let [[row col] (table/selected-cell grid)
+             cell-id   (graph/coords->id row (dec col))]
+         (ss/config! status-line
+                     :text (status-line-text {:graph   @state/graph-atom
+                                              :cell-id cell-id})))))))
 
 
 (defn- toolbar []
@@ -174,7 +189,8 @@
                                   :center
                                   (ss/border-panel
                                    :north  (code-editor/code-editor)
-                                   :center (ss/scrollable (table graph-atom model))))
+                                   :center (ss/scrollable (table graph-atom model)))
+                                  :south (ss/label :id :status-line :text "OK" :border 5 :foreground :gray))
                         :on-close :dispose)]
     (wire! frame graph-atom model)
     (ss/invoke-later (-> frame ss/pack! ss/show!))))

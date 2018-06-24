@@ -8,7 +8,10 @@ A Clojure-driven spreadsheet
 - [x] Loading
 - [x] Cell slices in formulas
 - [ ] main function and package as a jar
-- [ ] better editing UI (multi-line editor, some structural editing)
+- [X] Code editor: multiline support
+- [ ] Code editor: parinfer (in progress)
+- [ ] Cell editing: design interaction with code editor, F2, overwrite etc
+- [ ] Grid: proper row header
 - [ ] error handling in cells (and GUI to diplay stacktraces)
 - [ ] fill cells by increasing numbers in cell references in code
 - [ ] "Import" or "layer" CSV files
