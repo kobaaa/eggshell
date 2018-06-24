@@ -184,5 +184,6 @@
   (java.awt.Frame/getFrames))
 
 ;;(grid-frame state/graph-atom)
+;;(eggshell.gui/grid-frame eggshell.state/graph-atom)
 ;;(eggshell.controller/load-egg "test-resources/first.egg")
 ;;(def tt (ss/select (last (frames)) [:#grid]))
