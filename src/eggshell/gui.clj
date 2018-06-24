@@ -113,8 +113,23 @@
    (name cell-id)
    (when (graph/function? graph cell-id) ", function")))
 
+
+(defn- status-area []
+  (ss/border-panel
+   :id     :status-area
+   :north  (ss/label :id :status-line :text "OK" :border 4 :foreground :gray)
+   :center (ss/horizontal-panel
+            :id :error-area
+            :visible? false
+            :border 3
+            :preferred-size [100 :by 200]
+            :items
+            [(ss/scrollable
+              (ss/text :id :error :multi-line? true))])))
+
+
 (defn wire! [frame graph-atom table-model]
-  (let [{:keys [code-editor grid load-button save-button status-line]} (ss/group-by-id frame)]
+  (let [{:keys [code-editor grid load-button save-button status-area status-line error-area]} (ss/group-by-id frame)]
 
     ;;update table when grid graph changes
     (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
@@ -162,15 +177,22 @@
                     (controller/save-egg file {:graph         @state/graph-atom
                                                :column-widths (table/column-widths grid)}))))
 
-    ;;wire up status line
+    ;;wire up status area
     (table/listen-selection
      grid
      (fn [_]
        (let [[row col] (table/selected-cell grid)
              cell-id   (graph/coords->id row (dec col))]
-         (ss/config! status-line
-                     :text (status-line-text {:graph   @state/graph-atom
-                                              :cell-id cell-id})))))))
+         (ss/value! status-area
+                    {:status-line (status-line-text {:graph   @state/graph-atom
+                                                     :cell-id cell-id})
+                     :error       "No error"}))))
+
+    (ss/listen status-line :mouse-clicked
+               (fn [_]
+                 (ss/config! error-area
+                             :visible? (not (ss/config error-area :visible?))
+                             :preferred-size [(.getWidth error-area) :by 200])))))
 
 
 (defn- toolbar []
@@ -190,7 +212,7 @@
                                   (ss/border-panel
                                    :north  (code-editor/code-editor)
                                    :center (ss/scrollable (table graph-atom model)))
-                                  :south (ss/label :id :status-line :text "OK" :border 5 :foreground :gray))
+                                  :south (status-area))
                         :on-close :dispose)]
     (wire! frame graph-atom model)
     (ss/invoke-later (-> frame ss/pack! ss/show!))))
