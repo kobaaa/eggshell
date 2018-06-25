@@ -1,2 +1,4 @@
 repl:
-	clj -R:repl -J'-XX:-OmitStackTraceInFastThrow' bin/repl.clj
+	clj -R:local:repl \
+  -Sdeps '{:deps {rakk {:local/root "/Users/sideris/devel/rakk"}}}' \
+  -J'-XX:-OmitStackTraceInFastThrow' bin/repl.clj
