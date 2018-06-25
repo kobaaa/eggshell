@@ -7,6 +7,7 @@
             [seesaw.color :as color]
             [seesaw.dev :as dev]
             [eggshell.graph :as graph]
+            [rakk.core :as rakk]
             [eggshell.analyze :as analyze]
             [eggshell.controller :as controller]
             [eggshell.gui.table :as table]
@@ -18,7 +19,9 @@
 
 
 (defn render-value [x]
-  (cond (seq? x)
+  (cond (= x :rakk/error)
+        "ERROR"
+        (seq? x)
         (pr-str (doall x))
         (string? x)
         x
@@ -54,20 +57,35 @@
 
 (defn- value-at [g row col]
   (if (zero? col)
-    row
-    (let [cell-id (graph/coords->id row (dec col))]
-      (or (render-value (graph/value @g (keyword cell-id)))
-          ""))))
+    {:render-value (str row)}
+    (let [cell-id (keyword (graph/coords->id row (dec col)))]
+      (if-let [v (graph/value g cell-id)]
+        (merge
+         {:original-value v
+          :render-value   (render-value v)
+          :cell-id        cell-id}
+         (rakk/error-info g cell-id))
+        ""))))
+
+
+(defn- render [component g
+               {:keys [original-value render-value cell-id:rakk/error-type] :as value}
+               is-selected?]
+  (doto component
+    (.setText render-value)
+    (.setForeground (color/color (if (= error-type :primary) :white :black)))
+    (.setBackground (color/color (cond (= error-type :primary) defaults/primary-error-color
+                                       (= error-type :secondary) defaults/secondary-error-color
+                                       is-selected? defaults/selected-color
+                                       :else :white)))))
+
 
 
 (defn cell-renderer [g]
   (proxy [javax.swing.table.DefaultTableCellRenderer] []
     (getTableCellRendererComponent [table value is-selected has-focus row col]
       (let [c (proxy-super getTableCellRendererComponent table value is-selected has-focus row col)]
-        (doto c
-          ;;(.setText (str (value-at g row col)))
-          (.setForeground (color/color :black))
-          (.setBackground (color/color (if is-selected defaults/selected-color :white))))))))
+        (@#'render c g value is-selected)))))
 
 
 (defn table-model [g]
@@ -86,7 +104,7 @@
         ""
         (graph/idx->column (dec col))))
 
-    (getValueAt [row col] (value-at g row col))
+    (getValueAt [row col] (value-at @g row col))
 
     (setValueAt [value row col]
       (controller/set-cell-at! g [row (dec col)] value))
