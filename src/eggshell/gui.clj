@@ -14,13 +14,15 @@
             [eggshell.gui.code-editor :as code-editor]
             [eggshell.gui.defaults :as defaults]
             [eggshell.state :as state]
+            [eggshell.util :as util]
+            [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.edn :as edn]))
 
 
 (defn render-value [x]
   (cond (= x :rakk/error)
-        "ERROR"
+        "ERROR!"
         (seq? x)
         (pr-str (doall x))
         (string? x)
@@ -69,8 +71,9 @@
 
 
 (defn- render [component g
-               {:keys [original-value render-value cell-id:rakk/error-type] :as value}
+               {:keys [original-value render-value cell-id :rakk/error? :rakk/error-type] :as value}
                is-selected?]
+  (ss/config! component :halign (if error? :center :left))
   (doto component
     (.setText render-value)
     (.setForeground (color/color (if (= error-type :primary) :white :black)))
@@ -107,7 +110,8 @@
     (getValueAt [row col] (value-at @g row col))
 
     (setValueAt [value row col]
-      (controller/set-cell-at! g [row (dec col)] value))
+      (future
+        (controller/set-cell-at! g [row (dec col)] value)))
 
     (getColumnClass [^Integer c]
       (proxy-super getColumnClass c)
@@ -126,10 +130,11 @@
     (.setRowHeight 20)))
 
 
-(defn- status-line-text [{:keys [graph cell-id]}]
+(defn- status-line-text [{:keys [graph cell-id error?]}]
   (str
    (name cell-id)
-   (when (graph/function? graph cell-id) ", function")))
+   (when (graph/function? graph cell-id) ", function")
+   (when error? " - ERROR! click to expand")))
 
 
 (defn- status-area []
@@ -143,14 +148,41 @@
             :preferred-size [100 :by 200]
             :items
             [(ss/scrollable
-              (ss/text :id :error :multi-line? true))])))
+              (ss/text :id :error-text-area :multi-line? true :font defaults/mono-font))])))
+
+
+(defn- error-trace-text [error]
+  (str
+   (when (some-> error ex-data :rakk/secondary-error some?)
+     (str "These upstream cells contain errors: "
+          (str/join ", " (->> error ex-data :rakk/upstream-errors (map (comp name :node))))
+          "\n\n"))
+   (str/replace (util/with-err-str (repl/pst error))
+                "\t" "   ")))
+
+
+(defn update-status-area! [status-area error-text-area grid graph-atom]
+  (let [[row col] (table/selected-cell grid)]
+    (if (and row col)
+      (let [cell-id                                    (graph/coords->id row (dec col))
+            {:rakk/keys [error? error] :as error-info} (rakk/error-info @graph-atom cell-id)]
+        (ss/value! status-area
+                   {:status-line     (status-line-text {:graph   @state/graph-atom
+                                                        :cell-id cell-id
+                                                        :error?  error})
+                    :error-text-area (if-not error? "No errors" (error-trace-text error))})
+        (ss/scroll! error-text-area :to :top))
+      (ss/value! status-area
+                 {:status-line     "No selection"
+                  :error-text-area "No errors"}))))
 
 
 (defn wire! [frame graph-atom table-model]
-  (let [{:keys [code-editor grid load-button save-button status-area status-line error-area]} (ss/group-by-id frame)]
+  (let [{:keys [code-editor grid load-button save-button status-area status-line error-area error-text-area]}
+        (ss/group-by-id frame)]
 
     ;;update table when grid graph changes
-    (add-watch graph-atom :kk (fn [_ _ _ _] (.fireTableDataChanged table-model)))
+    (add-watch graph-atom :kk (fn [_ _ _ _] (ss/invoke-now (.fireTableDataChanged table-model))))
 
     ;;listen for cell selection changes to update code editor
     (table/listen-selection
@@ -191,24 +223,12 @@
                                               :grid       grid}))))
     (ss/listen save-button :action
                (fn [_]
-                  (when-let [file (chooser/choose-file :type :save)]
-                    (controller/save-egg file {:graph         @state/graph-atom
-                                               :column-widths (table/column-widths grid)}))))
+                 (when-let [file (chooser/choose-file :type :save)]
+                   (controller/save-egg file {:graph         @state/graph-atom
+                                              :column-widths (table/column-widths grid)}))))
 
     ;;wire up status area
-    (table/listen-selection
-     grid
-     (fn [_]
-       (let [[row col] (table/selected-cell grid)]
-         (if (and row col)
-           (let [cell-id   (graph/coords->id row (dec col))]
-             (ss/value! status-area
-                        {:status-line (status-line-text {:graph   @state/graph-atom
-                                                         :cell-id cell-id})
-                         :error       "No errors"}))
-           (ss/value! status-area
-                      {:status-line "No selection"
-                       :error       "No errors"})))))
+    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid graph-atom)))
 
     (ss/listen status-line :mouse-clicked
                (fn [_]
