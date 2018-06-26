@@ -184,7 +184,7 @@
                                               :column-widths (table/column-widths grid)}))))
 
     ;;wire up status area
-    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid graph)))
+    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (:graph @state-atom))))
 
     (ss/listen status-line :mouse-clicked
                (fn [_]
