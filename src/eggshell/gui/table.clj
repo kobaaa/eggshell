@@ -36,3 +36,17 @@
      (for [idx (range (.getColumnCount model))]
        (let [col (.getColumn model idx)]
          (.getWidth col))))))
+
+
+(defn stop-editing! [^javax.swing.JTable table]
+  (when-let [editor (.getCellEditor table)]
+    (if (.getCellEditorValue editor)
+      (.stopCellEditing editor)
+      (.cancelCellEditing editor))))
+
+
+(defn save-selection [^javax.swing.JTable table fun]
+  (let [selection (selected-cell table)]
+    (prn 'selection selection)
+    (fun)
+    (when selection (set-selection! table selection))))

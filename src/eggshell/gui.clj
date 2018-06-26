@@ -26,7 +26,8 @@
       (getTableCellEditorComponent [table value is-selected row col]
         (ss/config! text-field
                     :font defaults/mono-font
-                    :text (editable-getter [row (dec col)]))))))
+                    :text (editable-getter [row (dec col)])))
+      (shouldSelectCell [_] true))))
 
 
 (defn- render [component
@@ -82,6 +83,7 @@
                   :auto-resize :off
                   :show-grid? true
                   :model model)
+    ;;(.putClientProperty "terminateEditOnFocusLost" true)
     (.setDefaultRenderer Object (cell-renderer))
     (.setDefaultEditor Object (cell-editor editable-getter))
     (.setCellSelectionEnabled true)
@@ -142,7 +144,12 @@
         graph (:graph @state-atom)]
 
     ;;update table when grid graph changes
-    (add-watch state-atom :kk (fn [_ _ _ _] (ss/invoke-now (.fireTableDataChanged table-model))))
+    (add-watch state-atom :kk
+               (fn [_ _ _ _]
+                 (prn 'data-changed)
+                 (table/save-selection
+                  grid
+                  #(ss/invoke-now (.fireTableDataChanged table-model)))))
 
     ;;listen for cell selection changes to update code editor
     (table/listen-selection
@@ -161,7 +168,13 @@
 
     (keymap/map-key grid "F2"
                     (fn [_]
+                      (table/save-selection grid #(table/stop-editing! grid))
                       (ss/request-focus! code-editor)))
+
+
+    (keymap/map-key code-editor "ESCAPE"
+                    (fn [_]
+                      (ss/request-focus! grid)))
 
 
     ;;listen to ENTER to update cell being edited
