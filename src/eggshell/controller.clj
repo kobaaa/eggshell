@@ -67,6 +67,8 @@
         (pr-str (doall x))
         (string? x)
         x
+        (boolean? x)
+        (pr-str x)
         (nil? x)
         ""
         :else
@@ -78,13 +80,12 @@
     (if (= -1 col)
       {:render-value (str row)}
       (let [cell-id (keyword (graph/coords->id row col))]
-        (if-let [v (graph/value g cell-id)]
+        (let [v (graph/value g cell-id)]
           (merge
            {:original-value v
             :render-value   (render-value v)
             :cell-id        cell-id}
-           (rakk/error-info g cell-id))
-          "")))))
+           (rakk/error-info g cell-id)))))))
 
 
 (defn get-editable-value-at [state-atom [row col]]
