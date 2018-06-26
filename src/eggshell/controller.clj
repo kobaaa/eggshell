@@ -48,15 +48,27 @@
           s)))
 
 
+(defn- compile [code aliases]
+  (try
+    (let [ast (analyze/analyze code aliases)]
+      {:inputs (map keyword (analyze/cell-refs ast))
+       :code   (analyze/compile ast)})))
+
+
+(defn- set-function-at! [state-atom [row col] value]
+  (let [parsed                (read-string value)
+        {:keys [inputs code]} (compile code (:aliases @state-atom))]
+    (swap! state-atom update :graph graph/advance {}
+           [{:cell     cell-id
+             :inputs   inputs
+             :raw-code value
+             :code     code}])))
+
+
 (defn set-cell-at! [state-atom [row col] value]
   (let [cell-id (graph/coords->id row col)]
     (if (str/starts-with? value "(")
-      (let [code (read-string value)
-            ast  (analyze/analyze code (:aliases @state-atom))]
-        (swap! state-atom update :graph graph/advance {} [{:cell     cell-id
-                                                           :inputs   (map keyword (analyze/cell-refs ast))
-                                                           :raw-code value
-                                                           :code     (analyze/compile ast)}]))
+      (set-function-at! state-atom [row col] value)
       (swap! state-atom update :graph graph/advance {cell-id (input->value value)} []))))
 
 

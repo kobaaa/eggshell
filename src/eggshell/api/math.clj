@@ -4,7 +4,7 @@
 
 (defn + [cells]
   (if (seq? (first cells))
-    (map + cells)
+    (apply core/+ (map + cells))
     (apply core/+ (remove nil? cells))))
 
 

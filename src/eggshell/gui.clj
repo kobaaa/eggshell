@@ -158,6 +158,12 @@
                          :text      (editable-getter [row (dec col)])
                          :editable? true))))))
 
+
+    (keymap/map-key grid "F2"
+                    (fn [_]
+                      (ss/request-focus! code-editor)))
+
+
     ;;listen to ENTER to update cell being edited
     (keymap/map-key code-editor "ENTER"
                     (fn [_]
