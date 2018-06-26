@@ -55,9 +55,9 @@
        :code   (analyze/compile ast)})))
 
 
-(defn- set-function-at! [state-atom [row col] value]
+(defn- set-function-at! [state-atom cell-id [row col] value]
   (let [parsed                (read-string value)
-        {:keys [inputs code]} (compile code (:aliases @state-atom))]
+        {:keys [inputs code]} (compile parsed (:aliases @state-atom))]
     (swap! state-atom update :graph graph/advance {}
            [{:cell     cell-id
              :inputs   inputs
@@ -68,7 +68,7 @@
 (defn set-cell-at! [state-atom [row col] value]
   (let [cell-id (graph/coords->id row col)]
     (if (str/starts-with? value "(")
-      (set-function-at! state-atom [row col] value)
+      (set-function-at! state-atom cell-id [row col] value)
       (swap! state-atom update :graph graph/advance {cell-id (input->value value)} []))))
 
 
