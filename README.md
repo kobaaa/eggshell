@@ -10,10 +10,11 @@ A Clojure-driven spreadsheet
 - [ ] main function and package as a jar
 - [x] Code editor: multiline support
 - [ ] Code editor: parinfer - WIP
-- [ ] Cell editing: design interaction with code editor, F2, overwrite etc
+- [x] Cell editing: design interaction with code editor, F2
+- [ ] Cell editing: sync editor with cell display, maybe overwrite when in cell
 - [ ] Grid: proper row header
-- [x] error handling in cells (and GUI to diplay stacktraces)
-- [ ] hande compile errors in cells
+- [x] Errors: error handling in cells (and GUI to diplay stacktraces)
+- [x] Errors: handle compile errors in cells
 - [ ] fill cells by increasing numbers in cell references in code
 - [ ] "Import" or "layer" CSV files
 - [ ] export CSV
@@ -29,7 +30,7 @@ A Clojure-driven spreadsheet
 ## Bugs
 
 - [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
-- [ ] Fix selection after cell value has been updated
+- [x] Fix selection after cell value has been updated
 - [ ] Fix calculations happening on the swing thread
 - [ ] Fix save/load after state refactoring
 - [x] Once you've entered a function in a cell, you can't replace it with a scalar value

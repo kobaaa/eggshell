@@ -6,7 +6,8 @@
             [loom.attr :as attr]
             [rakk.core :as rakk]
             [clojure.string :as str]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn])
+  (:refer-clojure :exclude [compile]))
 
 
 (defn- compile-function [g n aliases]
@@ -52,17 +53,25 @@
   (try
     (let [ast (analyze/analyze code aliases)]
       {:inputs (map keyword (analyze/cell-refs ast))
-       :code   (analyze/compile ast)})))
+       :code   (analyze/compile ast)})
+    (catch Exception e
+      {:error e})))
 
 
 (defn- set-function-at! [state-atom cell-id [row col] value]
-  (let [parsed                (read-string value)
-        {:keys [inputs code]} (compile parsed (:aliases @state-atom))]
-    (swap! state-atom update :graph graph/advance {}
-           [{:cell     cell-id
-             :inputs   inputs
-             :raw-code value
-             :code     code}])))
+  (let [parsed                      (read-string value)
+        {:keys [inputs code error]} (compile parsed (:aliases @state-atom))]
+    (if error
+      (swap! state-atom update :graph graph/advance {}
+             [{:cell     cell-id
+               :inputs   []
+               :raw-code value
+               :error    error}])
+      (swap! state-atom update :graph graph/advance {}
+             [{:cell     cell-id
+               :inputs   inputs
+               :raw-code value
+               :code     code}]))))
 
 
 (defn set-cell-at! [state-atom [row col] value]
@@ -73,25 +82,27 @@
 
 
 (defn render-value [x]
-  (cond (= x :rakk/error) "ERROR!"
-        (seq? x) (pr-str (doall x))
-        (string? x) x
-        (boolean? x) (pr-str x)
-        (nil? x) ""
-        :else (pr-str x)))
+  (cond
+    (seq? x) (pr-str (doall x))
+    (string? x) x
+    (boolean? x) (pr-str x)
+    (nil? x) ""
+    :else (pr-str x)))
 
 
 (defn get-value-at [state-atom [row col]]
   (let [g (:graph @state-atom)]
     (if (= -1 col)
       {:render-value (str row)}
-      (let [cell-id (keyword (graph/coords->id row col))]
-        (let [v (graph/value g cell-id)]
-          (merge
-           {:original-value v
-            :render-value   (render-value v)
-            :cell-id        cell-id}
-           (rakk/error-info g cell-id)))))))
+      (let [cell-id (keyword (graph/coords->id row col))
+            v       (graph/value g cell-id)]
+        (merge
+         {:original-value v
+          :render-value   (if (rakk/error? g cell-id)
+                            "ERROR!"
+                            (render-value v))
+          :cell-id        cell-id}
+         (rakk/error-info g cell-id))))))
 
 
 (defn get-editable-value-at [state-atom [row col]]

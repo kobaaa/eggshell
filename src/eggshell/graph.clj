@@ -40,13 +40,19 @@
       (attr/add-attr cell ::raw-code raw-code)))
 
 
-(defn set-function-and-connect [g {:keys [cell inputs] :as fun}]
-  (let [g     (set-function g fun)
-        edges (incoming-edges g cell)
-        g     (if (seq edges)
-                (apply loom/remove-edges g edges)
-                g)]
-    (apply loom/add-edges g (for [input inputs] [input cell]))))
+(defn set-function-and-connect [g {:keys [cell inputs error raw-code] :as fun}]
+  (if error
+    (-> g
+        (rakk/set-error cell error)
+        (rakk/set-value cell :rakk/error)
+        (rakk/set-function cell :rakk/error)
+        (attr/add-attr cell ::raw-code raw-code))
+    (let [g     (set-function g fun)
+          edges (incoming-edges g cell)
+          g     (if (seq edges)
+                  (apply loom/remove-edges g edges)
+                  g)]
+      (apply loom/add-edges g (for [input inputs] [input cell])))))
 
 
 (defn advance
