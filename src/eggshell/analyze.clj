@@ -5,7 +5,8 @@
             [clojure.tools.analyzer.jvm :as ana.jvm]
             [clojure.tools.analyzer.passes.jvm.emit-form :refer [emit-form]]
             [clojure.string :as str]
-            [eggshell.graph :as graph]))
+            [eggshell.graph :as graph]
+            [clojure.walk :as walk]))
 
 ;; (set! *print-length* 20)
 ;; (set! *print-level* 6)
@@ -43,15 +44,28 @@
                         {:field field :ast ast}))))
 
 
+(defn- expand-aliases [form aliases]
+  (let [aliases (zipmap (map (comp str first) aliases)
+                        (map (comp str second) aliases))]
+    (walk/postwalk
+     (fn [x]
+       (if (and (symbol? x) (aliases (namespace x)))
+         (symbol (aliases (namespace x)) (name x))
+         x))
+     form)))
+
+
 (defn analyze
   "Analyze form to produce AST. Unknown names that look like cell refs
   are resolved as such."
-  [form]
-  (ana.jvm/analyze form
-                   (ana.jvm/empty-env)
-                   {:passes-opts
-                    (merge ana.jvm/default-passes-opts
-                           {:validate/unresolvable-symbol-handler unresolvable-symbol-handler})}))
+  [form aliases]
+  (-> form
+      (expand-aliases aliases)
+      (ana.jvm/analyze
+       (ana.jvm/empty-env)
+       {:passes-opts
+        (merge ana.jvm/default-passes-opts
+               {:validate/unresolvable-symbol-handler unresolvable-symbol-handler})})))
 
 
 (defn ast-get-cell

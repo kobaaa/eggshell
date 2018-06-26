@@ -29,6 +29,8 @@ A Clojure-driven spreadsheet
 
 - [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
 - [ ] Fix selection after cell value has been updated
+- [ ] Fix calculations happening on the swing thread
+- [ ] Fix save/load after state refactoring
 
 ## License
 

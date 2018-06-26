@@ -9,9 +9,9 @@
             [clojure.edn :as edn]))
 
 
-(defn- compile-function [g n]
+(defn- compile-function [g n aliases]
   (if-let [raw-code (attr/attr g n ::graph/raw-code)]
-    (let [ast  (analyze/analyze (read-string raw-code))
+    (let [ast  (analyze/analyze (read-string raw-code) {:aliases aliases})
           code (analyze/compile ast)]
       (-> g
           (attr/add-attr n :function (eval code))
@@ -19,20 +19,20 @@
     g))
 
 
-(defn- compile-functions [g]
-  (reduce compile-function g (loom/nodes g)))
+(defn- compile-functions [g aliases]
+  (reduce #(compile-function %1 %2 aliases) g (loom/nodes g)))
 
 
-(defn load-egg [filename {:keys [graph-atom]}]
-  (->> (io/load-egg filename)
-       :eggshell/graph
-       compile-functions
-       (swap! graph-atom update :graph))
+(defn load-egg [filename {:keys [state-atom]}]
+  (let [{:eggshell/keys [graph aliases]} (io/load-egg filename)]
+    (reset! state-atom
+            {:graph   (compile-functions graph aliases)
+             :aliases aliases}))
   nil)
 
 
-(defn save-egg [filename {:keys [graph]}]
-  (io/save-egg graph filename))
+(defn save-egg [filename {:keys [state]}]
+  (io/save-egg state filename))
 
 
 ;;TODO error handling
@@ -52,7 +52,7 @@
   (let [cell-id (graph/coords->id row col)]
     (if (str/starts-with? value "(")
       (let [code (read-string value)
-            ast  (analyze/analyze code)]
+            ast  (analyze/analyze code (:aliases @state-atom))]
         (swap! state-atom update :graph graph/advance {} [{:cell     cell-id
                                                            :inputs   (map keyword (analyze/cell-refs ast))
                                                            :raw-code value
@@ -61,18 +61,12 @@
 
 
 (defn render-value [x]
-  (cond (= x :rakk/error)
-        "ERROR!"
-        (seq? x)
-        (pr-str (doall x))
-        (string? x)
-        x
-        (boolean? x)
-        (pr-str x)
-        (nil? x)
-        ""
-        :else
-        (pr-str x)))
+  (cond (= x :rakk/error) "ERROR!"
+        (seq? x) (pr-str (doall x))
+        (string? x) x
+        (boolean? x) (pr-str x)
+        (nil? x) ""
+        :else (pr-str x)))
 
 
 (defn get-value-at [state-atom [row col]]
