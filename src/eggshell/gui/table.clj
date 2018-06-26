@@ -47,6 +47,5 @@
 
 (defn save-selection [^javax.swing.JTable table fun]
   (let [selection (selected-cell table)]
-    (prn 'selection selection)
     (fun)
     (when selection (set-selection! table selection))))

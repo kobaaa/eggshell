@@ -146,7 +146,6 @@
     ;;update table when grid graph changes
     (add-watch state-atom :kk
                (fn [_ _ _ _]
-                 (prn 'data-changed)
                  (table/save-selection
                   grid
                   #(ss/invoke-now (.fireTableDataChanged table-model)))))
@@ -168,7 +167,7 @@
 
     (keymap/map-key grid "F2"
                     (fn [_]
-                      (table/save-selection grid #(table/stop-editing! grid))
+                      (table/stop-editing! grid)
                       (ss/request-focus! code-editor)))
 
 
