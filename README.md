@@ -9,10 +9,10 @@ A Clojure-driven spreadsheet
 - [x] Cell slices in formulas
 - [ ] main function and package as a jar
 - [X] Code editor: multiline support
-- [ ] Code editor: parinfer (in progress)
+- [ ] Code editor: parinfer - in progress
 - [ ] Cell editing: design interaction with code editor, F2, overwrite etc
 - [ ] Grid: proper row header
-- [ ] error handling in cells (and GUI to diplay stacktraces)
+- [X] error handling in cells (and GUI to diplay stacktraces)
 - [ ] fill cells by increasing numbers in cell references in code
 - [ ] "Import" or "layer" CSV files
 - [ ] export CSV
@@ -23,10 +23,12 @@ A Clojure-driven spreadsheet
 - [ ] export spreadsheet as some sort of Clojure code
 - [ ] named cells?
 - [ ] save/load column widths
+- [ ] trace errors with arrows
 
 ## Bugs
 
 - [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
+- [ ] Fix selection after cell value has been updated
 
 ## License
 

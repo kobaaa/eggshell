@@ -111,7 +111,7 @@
 
     (setValueAt [value row col]
       (future
-        (controller/set-cell-at! g [row (dec col)] value)))
+        (controller/set-cell-at! g [row (dec col)] (if (= value "") nil value))))
 
     (getColumnClass [^Integer c]
       (proxy-super getColumnClass c)
@@ -154,8 +154,8 @@
 (defn- error-trace-text [error]
   (str
    (when (some-> error ex-data :rakk/secondary-error some?)
-     (str "These upstream cells contain errors: "
-          (str/join ", " (->> error ex-data :rakk/upstream-errors (map (comp name :node))))
+     (str "Some upstream cells contain errors: "
+          (str/join ", " (->> error ex-data :rakk/upstream-errors (map (comp name :node)) sort))
           "\n\n"))
    (str/replace (util/with-err-str (repl/pst error))
                 "\t" "   ")))
