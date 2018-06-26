@@ -20,57 +20,16 @@
             [clojure.edn :as edn]))
 
 
-(defn render-value [x]
-  (cond (= x :rakk/error)
-        "ERROR!"
-        (seq? x)
-        (pr-str (doall x))
-        (string? x)
-        x
-        (nil? x)
-        ""
-        :else
-        (pr-str x)))
-
-
-(defn editable-value [g cell]
-  (if (graph/function? g cell)
-    (graph/raw-code g cell)
-    (if-let [v (graph/value g cell)]
-      (cond (string? v)
-            v
-            :else
-            (pr-str v))
-      nil)))
-
-
-(defn cell-editor [g]
+(defn cell-editor [editable-getter]
   (let [text-field (ss/text)]
     (proxy [javax.swing.DefaultCellEditor] [text-field]
       (getTableCellEditorComponent [table value is-selected row col]
-        (let [cell      (graph/coords->id row (dec col))
-              function? (graph/function? g cell)]
-
-          (ss/config! text-field
-            ;;(.setFont (if function? mono-font text-font))
-            :font defaults/mono-font
-            :text (editable-value @g cell)))))))
+        (ss/config! text-field
+                    :font defaults/mono-font
+                    :text (editable-getter [row (dec col)]))))))
 
 
-(defn- value-at [g row col]
-  (if (zero? col)
-    {:render-value (str row)}
-    (let [cell-id (keyword (graph/coords->id row (dec col)))]
-      (if-let [v (graph/value g cell-id)]
-        (merge
-         {:original-value v
-          :render-value   (render-value v)
-          :cell-id        cell-id}
-         (rakk/error-info g cell-id))
-        ""))))
-
-
-(defn- render [component g
+(defn- render [component
                {:keys [original-value render-value cell-id :rakk/error? :rakk/error-type] :as value}
                is-selected?]
   (ss/config! component :halign (if error? :center :left))
@@ -84,14 +43,14 @@
 
 
 
-(defn cell-renderer [g]
+(defn cell-renderer []
   (proxy [javax.swing.table.DefaultTableCellRenderer] []
     (getTableCellRendererComponent [table value is-selected has-focus row col]
       (let [c (proxy-super getTableCellRendererComponent table value is-selected has-focus row col)]
-        (@#'render c g value is-selected)))))
+        (@#'render c value is-selected)))))
 
 
-(defn table-model [g]
+(defn table-model [cell-getter cell-setter]
   (proxy [javax.swing.table.DefaultTableModel] []
 
     (getColumnCount [] 50 ;;702
@@ -107,24 +66,24 @@
         ""
         (graph/idx->column (dec col))))
 
-    (getValueAt [row col] (value-at @g row col))
+    (getValueAt [row col] (cell-getter [row (dec col)]))
 
     (setValueAt [value row col]
       (future
-        (controller/set-cell-at! g [row (dec col)] (if (= value "") nil value))))
+        (cell-setter [row (dec col)] (if (= value "") nil value))))
 
     (getColumnClass [^Integer c]
       (proxy-super getColumnClass c)
       Object)))
 
 
-(defn table [graph-atom model]
+(defn grid [model editable-getter]
   (doto (ss/table :id :grid
                   :auto-resize :off
                   :show-grid? true
                   :model model)
-    (.setDefaultRenderer Object (cell-renderer graph-atom))
-    (.setDefaultEditor Object (cell-editor graph-atom))
+    (.setDefaultRenderer Object (cell-renderer))
+    (.setDefaultEditor Object (cell-editor editable-getter))
     (.setCellSelectionEnabled true)
     (.setGridColor (color/color "lightgray"))
     (.setRowHeight 20)))
@@ -161,13 +120,13 @@
                 "\t" "   ")))
 
 
-(defn update-status-area! [status-area error-text-area grid graph-atom]
+(defn update-status-area! [status-area error-text-area grid graph]
   (let [[row col] (table/selected-cell grid)]
     (if (and row col)
       (let [cell-id                                    (graph/coords->id row (dec col))
-            {:rakk/keys [error? error] :as error-info} (rakk/error-info @graph-atom cell-id)]
+            {:rakk/keys [error? error] :as error-info} (rakk/error-info graph cell-id)]
         (ss/value! status-area
-                   {:status-line     (status-line-text {:graph   @state/graph-atom
+                   {:status-line     (status-line-text {:graph   graph
                                                         :cell-id cell-id
                                                         :error?  error})
                     :error-text-area (if-not error? "No errors" (error-trace-text error))})
@@ -177,12 +136,13 @@
                   :error-text-area "No errors"}))))
 
 
-(defn wire! [frame graph-atom table-model]
+(defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
   (let [{:keys [code-editor grid load-button save-button status-area status-line error-area error-text-area]}
-        (ss/group-by-id frame)]
+        (ss/group-by-id frame)
+        graph (:graph @state-atom)]
 
     ;;update table when grid graph changes
-    (add-watch graph-atom :kk (fn [_ _ _ _] (ss/invoke-now (.fireTableDataChanged table-model))))
+    (add-watch state-atom :kk (fn [_ _ _ _] (ss/invoke-now (.fireTableDataChanged table-model))))
 
     ;;listen for cell selection changes to update code editor
     (table/listen-selection
@@ -193,19 +153,16 @@
            (ss/config! code-editor
                        :text      ""
                        :editable? false)
-           (let [[row col] selected
-                 cell      (graph/coords->id row (dec col))]
+           (let [[row col] selected]
              (ss/config! code-editor
-                         :text      (editable-value @graph-atom cell)
+                         :text      (editable-getter [row (dec col)])
                          :editable? true))))))
 
     ;;listen to ENTER to update cell being edited
     (keymap/map-key code-editor "ENTER"
                     (fn [_]
                       (let [[row col] (table/selected-cell grid)]
-                        (controller/set-cell-at! graph-atom
-                                                 [row (dec col)]
-                                                 (ss/value code-editor))
+                        (cell-setter [row (dec col)] (ss/value code-editor))
                         (table/set-selection! grid [row col])))
                     :scope :self)
 
@@ -219,16 +176,15 @@
     (ss/listen load-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file)]
-                   (controller/load-egg file {:graph-atom state/graph-atom
-                                              :grid       grid}))))
+                   (egg-loader file grid))))
     (ss/listen save-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file :type :save)]
-                   (controller/save-egg file {:graph         @state/graph-atom
+                   (controller/save-egg file {:graph         graph
                                               :column-widths (table/column-widths grid)}))))
 
     ;;wire up status area
-    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid graph-atom)))
+    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid graph)))
 
     (ss/listen status-line :mouse-clicked
                (fn [_]
@@ -245,18 +201,30 @@
     (ss/button :text "Save" :id :save-button)]))
 
 
-(defn grid-frame [graph-atom]
-  (let [model (table-model graph-atom)
-        frame (ss/frame :title "eggshell"
-                        :content (ss/border-panel
-                                  :north (toolbar)
-                                  :center
-                                  (ss/border-panel
-                                   :north  (code-editor/code-editor)
-                                   :center (ss/scrollable (table graph-atom model)))
-                                  :south (status-area))
-                        :on-close :dispose)]
-    (wire! frame graph-atom model)
+(defn grid-frame [state-atom]
+  (let [cell-setter     (partial controller/set-cell-at! state-atom)
+        cell-getter     (partial controller/get-value-at state-atom)
+        editable-getter (partial controller/get-editable-value-at state-atom)
+        egg-loader      (fn [file grid]
+                          (controller/load-egg file {:graph-atom (:graph @state-atom)
+                                                     :grid       grid}))
+        model           (table-model cell-getter cell-setter)
+        grid            (grid model editable-getter)
+        frame           (ss/frame :title "eggshell"
+                                  :content (ss/border-panel
+                                            :north (toolbar)
+                                            :center
+                                            (ss/border-panel
+                                             :north  (code-editor/code-editor)
+                                             :center (ss/scrollable grid))
+                                            :south (status-area))
+                                  :on-close :dispose)]
+    (wire! {:frame           frame
+            :state-atom      state-atom
+            :table-model     model
+            :cell-setter     cell-setter
+            :editable-getter editable-getter
+            :egg-loader      egg-loader})
     (ss/invoke-later (-> frame ss/pack! ss/show!))))
 
 
@@ -264,6 +232,6 @@
   (java.awt.Frame/getFrames))
 
 ;;(grid-frame state/graph-atom)
-;;(eggshell.gui/grid-frame eggshell.state/graph-atom)
+;;(eggshell.gui/grid-frame eggshell.state/egg-atom)
 ;;(eggshell.controller/load-egg "test-resources/first.egg")
 ;;(def tt (ss/select (last (frames)) [:#grid]))
