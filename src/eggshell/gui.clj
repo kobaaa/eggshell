@@ -139,7 +139,9 @@
 
 
 (defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
-  (let [{:keys [code-editor grid load-button save-button status-area status-line error-area error-text-area]}
+  (let [{:keys [load-button save-button aliases-button
+                code-editor grid
+                status-area status-line error-area error-text-area]}
         (ss/group-by-id frame)
         graph (:graph @state-atom)]
 
@@ -195,11 +197,15 @@
                (fn [_]
                  (when-let [file (chooser/choose-file)]
                    (egg-loader file grid))))
+
     (ss/listen save-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file :type :save)]
                    (controller/save-egg file {:graph         graph
                                               :column-widths (table/column-widths grid)}))))
+    (ss/listen aliases-button :action
+               (fn [_]
+                 (prn 'aliases)))
 
     ;;wire up status area
     (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (:graph @state-atom))))
@@ -216,7 +222,8 @@
    :align :left
    :items
    [(ss/button :text "Load" :id :load-button)
-    (ss/button :text "Save" :id :save-button)]))
+    (ss/button :text "Save" :id :save-button)
+    (ss/button :text "Aliases" :id :aliases-button)]))
 
 
 (defn grid-frame [state-atom]
@@ -243,7 +250,10 @@
             :cell-setter     cell-setter
             :editable-getter editable-getter
             :egg-loader      egg-loader})
-    (ss/invoke-later (-> frame ss/pack! ss/show!))))
+    (ss/invoke-later (doto frame
+                       ss/pack!
+                       ;;(.setLocationRelativeTo nil)
+                       ss/show!))))
 
 
 (defn frames []

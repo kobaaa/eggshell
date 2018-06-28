@@ -2,6 +2,7 @@
   (:require [seesaw.core :as ss]
             [seesaw.border :as border]
             [eggshell.gui.defaults :as defaults]
+            [eggshell.gui.common :as common]
             [cross-parinfer.core :as par]
             [clojure.string :as str]))
 
@@ -36,8 +37,8 @@
                         :font        defaults/mono-font
                         :editable?   false
                         :multi-line? true
-                        :border      (border/to-border (.getBorder (ss/text))
-                                                       (border/line-border :color "#eeeeee" :thickness 6)))]
+                        :border      (border/to-border defaults/textbox-border
+                                                       (common/panel-border {:thickness 6})))]
     (ss/listen (.getDocument editor) :document (fn [_] (parinfer! editor)))
     ;; (ss/listen editor :caret (fn [_]
     ;;                            (let [p (.getCaretPosition editor)]
