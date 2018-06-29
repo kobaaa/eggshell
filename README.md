@@ -2,7 +2,7 @@
 
 A Clojure-driven spreadsheet
 
-## TODO
+## TODO (essential)
 
 - [x] Saving
 - [x] Loading
@@ -19,13 +19,25 @@ A Clojure-driven spreadsheet
 - [ ] "Import" or "layer" CSV files
 - [ ] export CSV
 - [ ] Keyboard shortcuts
-- [ ] Aliases for namespaces + GUI + saving as part of files - WIP
+- [x] Aliases for namespaces + GUI + saving as part of files - WIP
+- [ ] Aliases: maybe require namespaces?
+- [ ] Aliases: user input validation with meaningful errors
 - [ ] all-lib for adding dependencies on the fly + GUI + saving as part of files
-- [ ] some meta madness like spreadsheet-in-a-cell
-- [ ] export spreadsheet as some sort of Clojure code
 - [ ] named cells?
+
+## TODO (polish)
+
+- [ ] Aliases: prevent opening more than one frame
+- [ ] Aliases: autocomplete??
+- [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
 - [ ] save/load column widths
 - [ ] trace errors with arrows
+
+## TODO (advanced)
+
+- [ ] export spreadsheet as some sort of Clojure code
+- [ ] some meta madness like spreadsheet-in-a-cell
+
 
 ## Bugs
 
