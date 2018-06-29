@@ -3,7 +3,8 @@
             [seesaw.border :as border]
             [seesaw.keymap :as keymap]
             [eggshell.gui.defaults :as defaults]
-            [eggshell.gui.common :as common]))
+            [eggshell.gui.common :as common]
+            [eggshell.util :refer [cfuture]]))
 
 
 (defn- aliases-panel []
@@ -28,10 +29,10 @@
 
     (ss/listen cancel-button :action (fn [_] (ss/dispose! frame)))
     (ss/listen apply-button  :action (fn [_]
-                                       (future
+                                       (cfuture
                                          (apply-fn (ss/value text-area)))))
     (ss/listen ok-button     :action (fn [_]
-                                       (future
+                                       (cfuture
                                          (apply-fn (ss/value text-area))
                                          (ss/invoke-later (ss/dispose! frame)))))))
 

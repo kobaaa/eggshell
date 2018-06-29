@@ -15,7 +15,7 @@
             [eggshell.gui.defaults :as defaults]
             [eggshell.gui.aliases :as aliases]
             [eggshell.state :as state]
-            [eggshell.util :as util]
+            [eggshell.util :as util :refer [cfuture]]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.edn :as edn]))
@@ -71,7 +71,7 @@
     (getValueAt [row col] (cell-getter [row (dec col)]))
 
     (setValueAt [value row col]
-      (future
+      (cfuture
         (cell-setter [row (dec col)] (if (= value "") nil value))))
 
     (getColumnClass [^Integer c]

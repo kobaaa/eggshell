@@ -9,3 +9,12 @@
      (binding [*err* s#]
        ~@body
        (str s#))))
+
+
+(defmacro cfuture [& body]
+  `(future
+     (try
+       ~@body
+       (catch Exception e#
+         (.printStackTrace e#)
+         (throw e#)))))

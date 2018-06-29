@@ -5,10 +5,10 @@
 (def default-aliases
   (str/join
    \newline
-   ["egg eggshell.api"
+   ["egg  eggshell.api"
     "math eggshell.api.math"
-    "str clojure.string"
-    "set clojure.set"]))
+    "str  clojure.string"
+    "set  clojure.set"]))
 
 
 (def egg-atom (atom {:graph   (graph/make)
