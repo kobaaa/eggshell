@@ -27,7 +27,7 @@ A Clojure-driven spreadsheet
 
 ## TODO (polish)
 
-- [ ] Aliases: prevent opening more than one frame
+- [x] Aliases: prevent opening more than one frame
 - [ ] Aliases: autocomplete??
 - [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
 - [ ] save/load column widths
@@ -37,7 +37,6 @@ A Clojure-driven spreadsheet
 
 - [ ] export spreadsheet as some sort of Clojure code
 - [ ] some meta madness like spreadsheet-in-a-cell
-
 
 ## Bugs
 

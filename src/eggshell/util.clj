@@ -14,7 +14,7 @@
 (defmacro cfuture [& body]
   `(future
      (try
-       ~@body
+       (do ~@body)
        (catch Exception e#
          (.printStackTrace e#)
          (throw e#)))))
