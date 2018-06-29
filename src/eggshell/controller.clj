@@ -10,25 +10,12 @@
   (:refer-clojure :exclude [compile]))
 
 
-(defn- compile-function [g n aliases]
-  (if-let [raw-code (attr/attr g n ::graph/raw-code)]
-    (let [ast  (analyze/analyze (read-string raw-code) {:aliases aliases})
-          code (analyze/compile ast)]
-      (-> g
-          (attr/add-attr n :function (eval code))
-          (attr/add-attr n ::code code)))
-    g))
-
-
-(defn- compile-functions [g aliases]
-  (reduce #(compile-function %1 %2 aliases) g (loom/nodes g)))
-
-
 (defn load-egg [filename {:keys [state-atom]}]
   (let [{:eggshell/keys [graph aliases]} (io/load-egg filename)]
-    (reset! state-atom
-            {:graph   (compile-functions graph aliases)
-             :aliases aliases}))
+    ;; (reset! state-atom
+    ;;         {:graph   (compile-functions graph aliases)
+    ;;          :aliases aliases})
+    )
   nil)
 
 
@@ -49,29 +36,46 @@
           s)))
 
 
-(defn- compile [code aliases]
-  (try
-    (let [ast (analyze/analyze code aliases)]
-      {:inputs (map keyword (analyze/cell-refs ast))
-       :code   (analyze/compile ast)})
-    (catch Exception e
-      {:error e})))
+(defn- parse-aliases [s]
+  (->> s
+       str/split-lines
+       (remove #(str/starts-with? % ";"))
+       (remove empty?)
+       (map #(str/split % #"\s+"))
+       (into {})))
+
+
+(defn- compile [string-code aliases cell-id] ;;TODO implement recompile-all based on this and on graph/advance
+  (let [parsed (read-string string-code)]
+   (try
+     (let [ast (analyze/analyze parsed {:aliases (parse-aliases aliases)})]
+       {:cell     cell-id
+        :raw-code string-code
+        :inputs   (map keyword (analyze/cell-refs ast))
+        :code     (analyze/compile ast)})
+     (catch Exception e
+       {:cell     cell-id
+        :raw-code string-code
+        :inputs   []
+        :error    e}))))
+
+
+(defn- recompile-all [{:keys [graph aliases] :as state}]
+  (let [function-cells (graph/functions graph)
+        compiled       (map #(compile (graph/raw-code graph %) aliases %) function-cells)]
+    (update state :graph graph/advance {} compiled)))
+
+
+(defn set-aliases! [state-atom aliases]
+  (swap! state-atom
+         #(-> %
+              (assoc :aliases aliases)
+              recompile-all)))
 
 
 (defn- set-function-at! [state-atom cell-id [row col] value]
-  (let [parsed                      (read-string value)
-        {:keys [inputs code error]} (compile parsed (:aliases @state-atom))]
-    (if error
-      (swap! state-atom update :graph graph/advance {}
-             [{:cell     cell-id
-               :inputs   []
-               :raw-code value
-               :error    error}])
-      (swap! state-atom update :graph graph/advance {}
-             [{:cell     cell-id
-               :inputs   inputs
-               :raw-code value
-               :code     code}]))))
+  (let [compiled (compile value (:aliases @state-atom) cell-id)]
+    (swap! state-atom update :graph graph/advance {} [compiled])))
 
 
 (defn set-cell-at! [state-atom [row col] value]

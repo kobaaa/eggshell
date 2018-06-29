@@ -1,6 +1,7 @@
 (ns eggshell.graph
   (:refer-clojure :exclude [range])
   (:require [clojure.core :as core]
+            [eggshell :as e]
             [rakk.core :as rakk]
             [loom.graph :as loom]
             [loom.attr :as attr]))
@@ -25,8 +26,12 @@
     (catch Exception _ false)))
 
 
+(defn functions [g]
+  (filter (partial function? g) (loom/nodes g)))
+
+
 (defn raw-code [g cell]
-  (attr/attr g cell ::raw-code))
+  (attr/attr g cell ::e/raw-code))
 
 
 (defn incoming-edges [g cell]
@@ -36,17 +41,17 @@
 (defn set-function [g {:keys [cell code raw-code]}]
   (-> g
       (rakk/set-function cell (eval code))
-      (attr/add-attr cell ::code code)
-      (attr/add-attr cell ::raw-code raw-code)))
+      (attr/add-attr cell ::e/code code)
+      (attr/add-attr cell ::e/raw-code raw-code)))
 
 
-(defn set-function-and-connect [g {:keys [cell inputs error raw-code] :as fun}]
+(defn- set-function-and-connect [g {:keys [cell inputs error raw-code] :as fun}]
   (if error
     (-> g
         (rakk/set-error cell error)
         (rakk/set-value cell :rakk/error)
         (rakk/set-function cell :rakk/error)
-        (attr/add-attr cell ::raw-code raw-code))
+        (attr/add-attr cell ::e/raw-code raw-code))
     (let [g     (set-function g fun)
           edges (incoming-edges g cell)
           g     (if (seq edges)
@@ -154,45 +159,3 @@
      (for [row (core/range (min row1 row2) (inc (max row1 row2)))]
        (for [col (core/range (min col1 col2) (inc (max col1 col2)))]
          (coords->id row col))))))
-
-
-(comment
-  (-> (init)
-      (set-value :a1 10)
-      (set-function-and-connect
-       :a2
-       '(fn [{:keys [a1]}] (* a1 2))
-       [:a1])
-      (rakk/init)))
-
-
-(comment
-  (-> (init)
-      (set-value :a1 10)
-      (set-function-and-connect
-       :a2
-       '(fn [{:keys [a1]}] (* a1 2))
-       [:a1])
-      (rakk/init)
-      (advance {:a1 4})
-      (advance {:a1 8} [{:cell   :a2
-                         :inputs [:a1]
-                         :code   '(fn [{:keys [a1]}] (* a1 100))}])))
-
-(comment
-  (-> (init)
-      (advance {:a1 10})
-      (advance {} [{:cell   :a2
-                    :code   '(fn [{:keys [a1]}] (* a1 2))
-                    :inputs [:a1]}])
-      (advance {} [{:cell   :a3
-                    :code   '(fn [{:keys [a2]}] (+ a2 200))
-                    :inputs [:a2]}])))
-
-(comment
-  (mutate! {:a0 20} [])
-  (mutate! {:a1 10} [])
-  (mutate! {} [{:cell :a2 :code '(fn [{:keys [a1]}] (* 3 a1)) :inputs #{:a1}}])
-  (mutate! {} [{:cell :a3 :code '(fn [{:keys [a2]}] (* 3 a2)) :inputs #{:a2}}])
-  (mutate! {:a1 55} [])
-  )

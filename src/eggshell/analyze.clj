@@ -45,20 +45,18 @@
 
 
 (defn- expand-aliases [form aliases]
-  (let [aliases (zipmap (map (comp str first) aliases)
-                        (map (comp str second) aliases))]
-    (walk/postwalk
-     (fn [x]
-       (if (and (symbol? x) (aliases (namespace x)))
-         (symbol (aliases (namespace x)) (name x))
-         x))
-     form)))
+  (walk/postwalk
+   (fn [x]
+     (if (and (symbol? x) (get aliases (namespace x)))
+       (symbol (aliases (namespace x)) (name x))
+       x))
+   form))
 
 
 (defn analyze
   "Analyze form to produce AST. Unknown names that look like cell refs
   are resolved as such."
-  [form aliases]
+  [form {:keys [aliases]}]
   (-> form
       (expand-aliases aliases)
       (ana.jvm/analyze

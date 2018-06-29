@@ -13,6 +13,7 @@
             [eggshell.gui.table :as table]
             [eggshell.gui.code-editor :as code-editor]
             [eggshell.gui.defaults :as defaults]
+            [eggshell.gui.aliases :as aliases]
             [eggshell.state :as state]
             [eggshell.util :as util]
             [clojure.repl :as repl]
@@ -205,7 +206,9 @@
                                               :column-widths (table/column-widths grid)}))))
     (ss/listen aliases-button :action
                (fn [_]
-                 (prn 'aliases)))
+                 (aliases/aliases-frame (:aliases @state-atom)
+                                        {:parent frame
+                                         :apply-fn (partial controller/set-aliases! state-atom)})))
 
     ;;wire up status area
     (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (:graph @state-atom))))

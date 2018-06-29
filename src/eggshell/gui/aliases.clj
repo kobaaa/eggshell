@@ -27,10 +27,13 @@
     (keymap/map-key frame "ESCAPE" (fn [_] (ss/dispose! frame)))
 
     (ss/listen cancel-button :action (fn [_] (ss/dispose! frame)))
-    (ss/listen apply-button  :action (fn [_] (apply-fn (ss/value text-area))))
+    (ss/listen apply-button  :action (fn [_]
+                                       (future
+                                         (apply-fn (ss/value text-area)))))
     (ss/listen ok-button     :action (fn [_]
-                                       (apply-fn (ss/value text-area))
-                                       (ss/dispose! frame)))))
+                                       (future
+                                         (apply-fn (ss/value text-area))
+                                         (ss/invoke-later (ss/dispose! frame)))))))
 
 
 (defn aliases-frame [aliases {:keys [parent apply-fn]}]
@@ -39,7 +42,9 @@
                   :on-close :dispose
                   :size [400 :by 200])
     (wire! apply-fn)
-    (.setLocationRelativeTo parent)))
+    (ss/value! {:text-area aliases})
+    (.setLocationRelativeTo parent)
+    ss/show!))
 
 
 ;;(-> (eggshell.gui.aliases/aliases-frame "" {:apply-fn prn :parent (first (frames))}) ss/show!)
