@@ -22,7 +22,7 @@ A Clojure-driven spreadsheet
 - [x] Aliases for namespaces + GUI + saving as part of files - WIP
 - [x] Aliases: maybe require namespaces?
 - [ ] Aliases: user input validation with meaningful errors
-- [x] all-lib for adding dependencies on the fly + GUI + saving as part of files
+- [x] deps: all-lib for adding dependencies on the fly + GUI + saving as part of files
 - [ ] named cells?
 
 ## TODO (polish)
@@ -36,6 +36,8 @@ A Clojure-driven spreadsheet
 - [ ] maybe merge interface for deps and aliases?
 - [ ] show value in error area when there is no error
 - [ ] show cell id on the left of code editor
+- [ ] re-used editor for deps should be wired for newlines etc
+- [ ] deps: disable all while working
 
 ## TODO (advanced)
 
