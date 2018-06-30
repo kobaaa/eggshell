@@ -20,7 +20,7 @@ A Clojure-driven spreadsheet
 - [ ] export CSV
 - [ ] Keyboard shortcuts
 - [x] Aliases for namespaces + GUI + saving as part of files - WIP
-- [ ] Aliases: maybe require namespaces?
+- [x] Aliases: maybe require namespaces?
 - [ ] Aliases: user input validation with meaningful errors
 - [x] all-lib for adding dependencies on the fly + GUI + saving as part of files
 - [ ] named cells?
@@ -32,6 +32,10 @@ A Clojure-driven spreadsheet
 - [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
 - [ ] save/load column widths
 - [ ] trace errors with arrows
+- [ ] user-visible logging
+- [ ] maybe merge interface for deps and aliases?
+- [ ] show value in error area when there is no error
+- [ ] show cell id on the left of code editor
 
 ## TODO (advanced)
 
