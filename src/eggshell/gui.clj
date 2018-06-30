@@ -216,11 +216,12 @@
     ;;wire up status area
     (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (::e/graph @state-atom))))
 
-    (ss/listen status-line :mouse-clicked
-               (fn [_]
-                 (ss/config! error-area
-                             :visible? (not (ss/config error-area :visible?))
-                             :preferred-size [(.getWidth error-area) :by 200])))))
+    (letfn [(toggle-error-area [_] (ss/config! error-area
+                                               :visible? (not (ss/config error-area :visible?))
+                                               :preferred-size [(.getWidth error-area) :by 200]))]
+
+     (ss/listen status-line :mouse-clicked toggle-error-area)
+     (keymap/map-key frame "meta E" toggle-error-area))))
 
 
 (defn- toolbar []

@@ -80,10 +80,11 @@
 
 
 (defn set-cell-at! [state-atom [row col] value]
-  (let [cell-id (graph/coords->id row col)]
-    (if (str/starts-with? value "(")
-      (set-function-at! state-atom cell-id [row col] value)
-      (swap! state-atom update ::e/graph graph/advance {cell-id (input->value value)} []))))
+  (when value
+    (let [cell-id (graph/coords->id row col)]
+      (if (str/starts-with? value "(")
+        (set-function-at! state-atom cell-id [row col] value)
+        (swap! state-atom update ::e/graph graph/advance {cell-id (input->value value)} [])))))
 
 
 (defn render-value [x]
