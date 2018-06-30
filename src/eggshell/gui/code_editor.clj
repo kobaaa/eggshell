@@ -35,7 +35,7 @@
 (defn code-editor []
   (let [editor (ss/text :id          :code-editor
                         :font        defaults/mono-font
-                        :editable?   false
+                        ;;:editable?   false
                         :multi-line? true
                         :border      (border/to-border defaults/textbox-border
                                                        (common/panel-border {:thickness 6})))]

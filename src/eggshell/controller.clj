@@ -7,7 +7,8 @@
             [loom.attr :as attr]
             [rakk.core :as rakk]
             [clojure.string :as str]
-            [clojure.edn :as edn])
+            [clojure.edn :as edn]
+            [clojure.tools.deps.alpha.repl :as deps])
   (:refer-clojure :exclude [compile]))
 
 
@@ -61,7 +62,7 @@
         :error    e}))))
 
 
-(defn- recompile-all [{:keys [graph aliases] :as state}]
+(defn- recompile-all [{::e/keys [graph aliases] :as state}]
   (let [function-cells (graph/functions graph)
         compiled       (map #(compile (graph/raw-code graph %) aliases %) function-cells)]
     (update state ::e/graph graph/advance {} compiled)))
@@ -71,6 +72,24 @@
   (swap! state-atom
          #(-> %
               (assoc ::e/aliases aliases)
+              recompile-all)))
+
+
+(defn add-libs! [deps]
+  (doseq [[lib coord] deps]
+    (print "Adding lib:" (pr-str lib coord) " ")
+    (let [res (try (deps/add-lib lib coord)
+                   (catch Exception e
+                     (.printStackTrace e)
+                     (throw e)))]
+      (println (if res "[OK]" "[FAILED]")))))
+
+
+(defn set-deps! [state-atom deps]
+  (add-libs! (edn/read-string deps))
+  (swap! state-atom
+         #(-> %
+              (assoc ::e/deps deps)
               recompile-all)))
 
 

@@ -16,6 +16,7 @@
             [eggshell.gui.defaults :as defaults]
             [eggshell.gui.common :as common]
             [eggshell.gui.aliases :as aliases]
+            [eggshell.gui.deps :as deps]
             [eggshell.state :as state]
             [eggshell.util :as util :refer [cfuture]]
             [clojure.repl :as repl]
@@ -142,7 +143,7 @@
 
 
 (defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
-  (let [{:keys [load-button save-button aliases-button
+  (let [{:keys [load-button save-button deps-button aliases-button
                 code-editor grid
                 status-area status-line error-area error-text-area]}
         (ss/group-by-id frame)
@@ -207,6 +208,14 @@
                  (when-let [file (chooser/choose-file :type :save)]
                    (controller/save-egg file {::e/graph         graph
                                               ::e/column-widths (table/column-widths grid)}))))
+
+    (ss/listen deps-button :action
+               (fn [_]
+                 (common/show-frame-once
+                  (deps/deps-frame (::e/deps @state-atom)
+                                   {:parent frame
+                                    :apply-fn (partial controller/set-deps! state-atom)}))))
+
     (ss/listen aliases-button :action
                (fn [_]
                  (common/show-frame-once
@@ -232,6 +241,7 @@
    :items
    [(ss/button :text "Load" :id :load-button)
     (ss/button :text "Save" :id :save-button)
+    (ss/button :text "Deps" :id :deps-button)
     (ss/button :text "Aliases" :id :aliases-button)]))
 
 
@@ -272,3 +282,7 @@
 ;;(eggshell.gui/grid-frame eggshell.state/egg-atom)
 ;;(eggshell.controller/load-egg "test-resources/first.egg")
 ;;(def tt (ss/select (last (frames)) [:#grid]))
+
+(comment
+ {org.clojure/core.memoize {:mvn/version "0.7.1"}
+  clj-time                 {:mvn/version "0.14.4"}})

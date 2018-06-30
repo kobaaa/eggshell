@@ -13,6 +13,7 @@
 
 
 (def egg-atom (atom {::e/graph   (graph/make)
+                     ::e/deps    "{}"
                      ::e/aliases default-aliases}))
 
 (atom
