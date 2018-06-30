@@ -21,16 +21,16 @@
 
 
 (defn wire! [frame apply-fn]
-  (let [{:keys [text-area cancel-button apply-button ok-button]} (ss/group-by-id frame)]
+  (let [{:keys [code-editor cancel-button apply-button ok-button]} (ss/group-by-id frame)]
     (keymap/map-key frame "ESCAPE" (fn [_] (ss/dispose! frame)))
 
     (ss/listen cancel-button :action (fn [_] (ss/dispose! frame)))
     (ss/listen apply-button  :action (fn [_]
                                        (cfuture
-                                         (apply-fn (ss/value text-area)))))
+                                         (apply-fn (ss/value code-editor)))))
     (ss/listen ok-button     :action (fn [_]
                                        (cfuture
-                                         (apply-fn (ss/value text-area))
+                                         (apply-fn (ss/value code-editor))
                                          (ss/invoke-later (ss/dispose! frame)))))))
 
 

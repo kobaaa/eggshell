@@ -69,6 +69,9 @@
 
 
 (defn set-aliases! [state-atom aliases]
+  (doseq [ns (map second (parse-aliases aliases))]
+    (println "Requiring" ns)
+    (require (symbol ns)))
   (swap! state-atom
          #(-> %
               (assoc ::e/aliases aliases)
@@ -76,13 +79,19 @@
 
 
 (defn add-libs! [deps]
+  ;; (prn 'in-future)
+  ;; (prn
+  ;;  (take-while
+  ;;   (complement nil?)
+  ;;   (iterate #(.getParent %)
+  ;;            (.getContextClassLoader (Thread/currentThread)))))
   (doseq [[lib coord] deps]
     (print "Adding lib:" (pr-str lib coord) " ")
     (let [res (try (deps/add-lib lib coord)
                    (catch Exception e
                      (.printStackTrace e)
                      (throw e)))]
-      (println (if res "[OK]" "[FAILED]")))))
+      (println (if res "[ADDED]" "[SKIPPED]")))))
 
 
 (defn set-deps! [state-atom deps]
