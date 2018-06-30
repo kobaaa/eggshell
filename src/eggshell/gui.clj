@@ -169,6 +169,7 @@
                          :text      (editable-getter [row (dec col)])
                          :editable? true))))))
 
+    (keymap/map-key grid "meta META" common/nothing)
 
     (keymap/map-key grid "F2"
                     (fn [_]
@@ -220,8 +221,9 @@
                                                :visible? (not (ss/config error-area :visible?))
                                                :preferred-size [(.getWidth error-area) :by 200]))]
 
-     (ss/listen status-line :mouse-clicked toggle-error-area)
-     (keymap/map-key frame "meta E" toggle-error-area))))
+      (ss/listen status-line :mouse-clicked toggle-error-area)
+      (keymap/map-key frame "meta E" toggle-error-area)
+      (keymap/map-key grid "meta E" toggle-error-area))))
 
 
 (defn- toolbar []

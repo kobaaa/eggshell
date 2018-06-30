@@ -26,3 +26,6 @@
          (ss/listen frame# :window-closed
                     (fn [e#] (swap! show-frame-once-state dissoc ~k)))
          frame#))))
+
+
+(defn nothing [_])
