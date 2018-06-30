@@ -9,7 +9,7 @@ A Clojure-driven spreadsheet
 - [x] Cell slices in formulas
 - [ ] main function and package as a jar
 - [x] Code editor: multiline support
-- [ ] Code editor: parinfer - WIP
+- [ ] (WIP) Code editor: parinfer
 - [x] Cell editing: design interaction with code editor, F2
 - [ ] Cell editing: sync editor with cell display, maybe overwrite when in cell
 - [ ] Grid: proper row header
@@ -22,7 +22,7 @@ A Clojure-driven spreadsheet
 - [x] Aliases for namespaces + GUI + saving as part of files - WIP
 - [ ] Aliases: maybe require namespaces?
 - [ ] Aliases: user input validation with meaningful errors
-- [ ] all-lib for adding dependencies on the fly + GUI + saving as part of files
+- [x] all-lib for adding dependencies on the fly + GUI + saving as part of files
 - [ ] named cells?
 
 ## TODO (polish)

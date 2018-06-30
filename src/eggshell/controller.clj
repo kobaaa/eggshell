@@ -50,7 +50,7 @@
 (defn- compile [string-code aliases cell-id] ;;TODO implement recompile-all based on this and on graph/advance
   (let [parsed (read-string string-code)]
    (try
-     (let [ast (analyze/analyze parsed {::e/aliases (parse-aliases aliases)})]
+     (let [ast (analyze/analyze parsed {:aliases (parse-aliases aliases)})]
        {:cell     cell-id
         :raw-code string-code
         :inputs   (map keyword (analyze/cell-refs ast))

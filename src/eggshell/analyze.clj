@@ -55,7 +55,7 @@
 
 (defn analyze
   "Analyze form to produce AST. Unknown names that look like cell refs
-  are resolved as such."
+  are resolved as refs."
   [form {:keys [aliases]}]
   (-> form
       (expand-aliases aliases)

@@ -187,8 +187,9 @@
     (keymap/map-key code-editor "ENTER"
                     (fn [_]
                       (let [[row col] (table/selected-cell grid)]
-                        (cell-setter [row (dec col)] (ss/value code-editor))
-                        (table/set-selection! grid [row col])))
+                        (cfuture
+                         (cell-setter [row (dec col)] (ss/value code-editor))
+                         (ss/invoke-later (table/set-selection! grid [row col])))))
                     :scope :self)
 
 
