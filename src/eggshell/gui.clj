@@ -8,6 +8,7 @@
             [seesaw.dev :as dev]
             [eggshell.graph :as graph]
             [rakk.core :as rakk]
+            [eggshell :as e]
             [eggshell.analyze :as analyze]
             [eggshell.controller :as controller]
             [eggshell.gui.table :as table]
@@ -145,7 +146,7 @@
                 code-editor grid
                 status-area status-line error-area error-text-area]}
         (ss/group-by-id frame)
-        graph (:graph @state-atom)]
+        graph (::e/graph @state-atom)]
 
     ;;update table when grid graph changes
     (add-watch state-atom :kk
@@ -203,17 +204,17 @@
     (ss/listen save-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file :type :save)]
-                   (controller/save-egg file {:graph         graph
-                                              :column-widths (table/column-widths grid)}))))
+                   (controller/save-egg file {::e/graph         graph
+                                              ::e/column-widths (table/column-widths grid)}))))
     (ss/listen aliases-button :action
                (fn [_]
                  (common/show-frame-once
-                  (aliases/aliases-frame (:aliases @state-atom)
+                  (aliases/aliases-frame (::e/aliases @state-atom)
                                          {:parent frame
                                           :apply-fn (partial controller/set-aliases! state-atom)}))))
 
     ;;wire up status area
-    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (:graph @state-atom))))
+    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (::e/graph @state-atom))))
 
     (ss/listen status-line :mouse-clicked
                (fn [_]
@@ -236,7 +237,7 @@
         cell-getter     (partial controller/get-value-at state-atom)
         editable-getter (partial controller/get-editable-value-at state-atom)
         egg-loader      (fn [file grid]
-                          (controller/load-egg file {:graph-atom (:graph @state-atom)
+                          (controller/load-egg file {:graph-atom (::e/graph @state-atom)
                                                      :grid       grid}))
         model           (table-model cell-getter cell-setter)
         grid            (grid model editable-getter)

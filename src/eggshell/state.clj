@@ -1,5 +1,6 @@
 (ns eggshell.state
-  (:require [eggshell.graph :as graph]
+  (:require [eggshell :as e]
+            [eggshell.graph :as graph]
             [clojure.string :as str]))
 
 (def default-aliases
@@ -11,13 +12,13 @@
     "set  clojure.set"]))
 
 
-(def egg-atom (atom {:graph   (graph/make)
-                     :aliases default-aliases}))
+(def egg-atom (atom {::e/graph   (graph/make)
+                     ::e/aliases default-aliases}))
 
 (atom
- {:eggs {"uuid" (atom {:id       "uuid"
-                       :filename "my.egg"
-                       :aliases  []
-                       :deps     {}
-                       :graph    {}
-                       :gui      {:column-widths []}})}})
+ {:eggs {"uuid" (atom {::e/id       "uuid"
+                       ::e/filename "my.egg"
+                       ::e/aliases  []
+                       ::e/deps     {}
+                       ::e/graph    {}
+                       ::e/gui      {:column-widths []}})}})
