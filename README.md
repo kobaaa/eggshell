@@ -15,7 +15,8 @@ A Clojure-driven spreadsheet
 - [ ] Grid: proper row header
 - [x] Errors: error handling in cells (and GUI to diplay stacktraces)
 - [x] Errors: handle compile errors in cells
-- [ ] fill cells by increasing numbers in cell references in code
+- [ ] autofill: fill cells by increasing numbers in cell references in code
+- [ ] copy/paste cell value, copy/paste cell formula
 - [ ] "Import" or "layer" CSV files
 - [ ] export CSV
 - [ ] Keyboard shortcuts
@@ -38,6 +39,7 @@ A Clojure-driven spreadsheet
 - [ ] show cell id on the left of code editor
 - [ ] re-used editor for deps should be wired for newlines etc
 - [ ] deps: disable all while working
+- [ ] provide a way to make a cell value `nil` and a way to make it `""`
 
 ## TODO (advanced)
 
