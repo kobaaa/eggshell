@@ -111,7 +111,7 @@
    :id     :status-area
    :north  (ss/label :id :status-line :text "OK" :border 4 :foreground :gray)
    :center (ss/horizontal-panel
-            :id :error-area
+            :id :value-area
             :visible? false
             :border 3
             :preferred-size [100 :by 200]
@@ -174,7 +174,7 @@
 (defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
   (let [{:keys [load-button save-button deps-button aliases-button
                 cell-id-label code-editor grid
-                status-area status-line error-area cell-value-area]}
+                status-area status-line value-area cell-value-area]}
         (ss/group-by-id frame)
         graph (::e/graph @state-atom)]
 
@@ -248,13 +248,13 @@
     ;;wire up status area
     (table/listen-selection grid (fn [_] (update-status-area! status-area cell-value-area grid (::e/graph @state-atom))))
 
-    (letfn [(toggle-error-area [_] (ss/config! error-area
-                                               :visible? (not (ss/config error-area :visible?))
-                                               :preferred-size [(.getWidth error-area) :by 200]))]
+    (letfn [(toggle-value-area [_] (ss/config! value-area
+                                               :visible? (not (ss/config value-area :visible?))
+                                               :preferred-size [(.getWidth value-area) :by 200]))]
 
-      (ss/listen status-line :mouse-clicked toggle-error-area)
-      (keymap/map-key frame "meta E" toggle-error-area)
-      (keymap/map-key grid "meta E" toggle-error-area))))
+      (ss/listen status-line :mouse-clicked toggle-value-area)
+      (keymap/map-key frame "meta E" toggle-value-area)
+      (keymap/map-key grid "meta E" toggle-value-area))))
 
 
 (defn- toolbar []

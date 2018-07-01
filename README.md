@@ -2,6 +2,14 @@
 
 A Clojure-driven spreadsheet
 
+## Shortcut keys
+
+* `F2` to edit cell content in the code editor (at the top of the grid)
+* `Esc` while in cell editor to go back to grid
+* `Enter` while in cell editor to apply your change
+* `Ctrl+Enter` while in cell editor to enter a newline
+* `Cmd+E` to show cell value/cell error area (at the bottom of the frame)
+
 ## TODO (essential)
 
 - [x] Saving
