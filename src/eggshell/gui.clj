@@ -22,6 +22,7 @@
             [eggshell.util :as util :refer [cfuture]]
             [clojure.repl :as repl]
             [clojure.string :as str]
+            [clojure.pprint :as pp]
             [clojure.edn :as edn]))
 
 
@@ -116,7 +117,14 @@
             :preferred-size [100 :by 200]
             :items
             [(ss/scrollable
-              (ss/text :id :error-text-area :multi-line? true :font defaults/mono-font))])))
+              (ss/text :id :cell-value-area :multi-line? true :font defaults/mono-font))])))
+
+
+(defn- cell-value-text [value]
+  (str
+   "type: " (or (some-> value type .getName) "nil")
+   "\n\n"
+   (with-out-str (pp/pprint value))))
 
 
 (defn- error-trace-text [error]
@@ -129,7 +137,7 @@
                 "\t" "   ")))
 
 
-(defn update-status-area! [status-area error-text-area grid graph]
+(defn update-status-area! [status-area cell-value-area grid graph]
   (let [[row col] (table/selected-cell grid)]
     (if (and row col)
       (let [cell-id                                    (graph/coords->id row col)
@@ -138,11 +146,13 @@
                    {:status-line     (status-line-text {:graph   graph
                                                         :cell-id cell-id
                                                         :error?  error})
-                    :error-text-area (if-not error? "No errors" (error-trace-text error))})
-        (ss/scroll! error-text-area :to :top))
+                    :cell-value-area (if-not error?
+                                       (cell-value-text (graph/value graph cell-id))
+                                       (error-trace-text error))})
+        (ss/scroll! cell-value-area :to :top))
       (ss/value! status-area
                  {:status-line     "No selection"
-                  :error-text-area "No errors"}))))
+                  :cell-value-area "No errors"}))))
 
 
 (defn- update-code-editor! [code-editor cell-id-label grid editable-getter]
@@ -164,7 +174,7 @@
 (defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
   (let [{:keys [load-button save-button deps-button aliases-button
                 cell-id-label code-editor grid
-                status-area status-line error-area error-text-area]}
+                status-area status-line error-area cell-value-area]}
         (ss/group-by-id frame)
         graph (::e/graph @state-atom)]
 
@@ -236,7 +246,7 @@
                                           :apply-fn (partial controller/set-aliases! state-atom)}))))
 
     ;;wire up status area
-    (table/listen-selection grid (fn [_] (update-status-area! status-area error-text-area grid (::e/graph @state-atom))))
+    (table/listen-selection grid (fn [_] (update-status-area! status-area cell-value-area grid (::e/graph @state-atom))))
 
     (letfn [(toggle-error-area [_] (ss/config! error-area
                                                :visible? (not (ss/config error-area :visible?))
@@ -272,8 +282,10 @@
                                             :center
                                             (ss/border-panel
                                              :north  (ss/border-panel
-                                                      :west   (ss/label :id :cell-id-label :font defaults/mono-font
-                                                                        :border (border/empty-border :left 10))
+                                                      :west   (ss/label :id :cell-id-label
+                                                                        :font defaults/mono-font
+                                                                        :text "N/A ="
+                                                                        :border (border/empty-border :left 14))
                                                       :center (code-editor/code-editor))
                                              :center grid)
                                             :south (status-area))

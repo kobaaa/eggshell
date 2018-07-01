@@ -29,7 +29,9 @@ A Clojure-driven spreadsheet
 ## TODO (polish)
 
 - [ ] user-visible logging
-- [ ] show pretty-printed value in error area when there is no error
+- [ ] deps: re-used editor for deps should be wired for newlines etc
+- [ ] deps: disable all while working
+- [x] show pretty-printed value in error area when there is no error
 - [x] show cell id on the left of code editor
 - [ ] Row header: resize row height uniformly and individually
 - [ ] provide a way to make a cell value `nil` and a way to make it `""`
@@ -39,8 +41,7 @@ A Clojure-driven spreadsheet
 - [ ] save/load column widths
 - [ ] trace errors with arrows
 - [ ] maybe merge interface for deps and aliases?
-- [ ] re-used editor for deps should be wired for newlines etc
-- [ ] deps: disable all while working
+- [ ] inputs with data structure literals should maintain their formatting for better editing
 
 ## TODO (advanced)
 
@@ -49,12 +50,12 @@ A Clojure-driven spreadsheet
 
 ## Bugs
 
+- [ ] Having lots of rows make startup slow because row header doesn't seem to be lazy
 - [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
 - [x] Fix selection after cell value has been updated
 - [ ] Fix calculations happening on the swing thread
 - [ ] Fix save/load after state refactoring
 - [x] Once you've entered a function in a cell, you can't replace it with a scalar value
-- [ ] Having lots of rows make startup slow because row header doesn't seem to be lazy
 
 ## License
 
