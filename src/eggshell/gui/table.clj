@@ -1,5 +1,6 @@
 (ns eggshell.gui.table
-  (:require [seesaw.core :as ss]))
+  (:require [seesaw.core :as ss]
+            [seesaw.border :as border]))
 
 
 (defn selected-cell [^javax.swing.JTable table]
@@ -49,3 +50,38 @@
   (let [selection (selected-cell table)]
     (fun)
     (when selection (set-selection! table selection))))
+
+
+(defn row-header-renderer [^javax.swing.JTable table]
+  (let [header (.getTableHeader table)
+        label  (doto (ss/text)
+                 (ss/config! :halign :center
+                             :background "#e9e9e9")
+                 (.setOpaque true)
+                 (.setBorder (border/line-border :color :lightgrey :bottom 1 :right 1))
+                 (.setForeground (.getForeground header))
+                 (.setFont (.getFont header))
+                 (.setDoubleBuffered true))]
+   (reify javax.swing.ListCellRenderer
+     (getListCellRendererComponent [this list value index selected? has-focus?]
+       (doto label
+         (.setText value)
+         (.setPreferredSize nil)
+         (.setPreferredSize
+          (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table index))))
+       ;;(.firePropertyChange list "cellRenderer" 0 1)
+       label))))
+
+(defn row-header [^javax.swing.JTable table]
+  (let [model (reify javax.swing.ListModel
+                (getElementAt [_ index] (str index))
+                (getSize [_] (.getRowCount table))
+
+                (addListDataListener [_ _])
+                (removeListDataListener [_ _]))]
+    (doto (javax.swing.JList. model)
+      (.setOpaque false)
+      (.setFixedCellWidth 50)
+      (.setCellRenderer (row-header-renderer table))
+      (.setForeground (.getForeground table))
+      (.setBackground (.getBackground table)))))

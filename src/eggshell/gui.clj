@@ -30,7 +30,7 @@
       (getTableCellEditorComponent [table value is-selected row col]
         (ss/config! text-field
                     :font defaults/mono-font
-                    :text (editable-getter [row (dec col)])))
+                    :text (editable-getter [row col])))
       (shouldSelectCell [_] true))))
 
 
@@ -61,21 +61,20 @@
     (getColumnCount [] 50 ;;702
       ) ;; excel has 16384
 
-    (getRowCount [] 1048576)
+    (getRowCount [] 5000 ;;1048576
+      )
 
     (isCellEditable [row col]
-      (not= col 0))
+      true)
 
     (getColumnName [col]
-      (if (zero? col)
-        ""
-        (graph/idx->column (dec col))))
+      (graph/idx->column col))
 
-    (getValueAt [row col] (cell-getter [row (dec col)]))
+    (getValueAt [row col] (cell-getter [row col]))
 
     (setValueAt [value row col]
       (cfuture
-        (cell-setter [row (dec col)] (if (= value "") nil value))))
+        (cell-setter [row col] (if (= value "") nil value))))
 
     (getColumnClass [^Integer c]
       (proxy-super getColumnClass c)
@@ -83,16 +82,19 @@
 
 
 (defn grid [model editable-getter]
-  (doto (ss/table :id :grid
-                  :auto-resize :off
-                  :show-grid? true
-                  :model model)
-    ;;(.putClientProperty "terminateEditOnFocusLost" true)
-    (.setDefaultRenderer Object (cell-renderer))
-    (.setDefaultEditor Object (cell-editor editable-getter))
-    (.setCellSelectionEnabled true)
-    (.setGridColor (color/color "lightgray"))
-    (.setRowHeight 20)))
+  (let [table (doto (ss/table :id :grid
+                              :auto-resize :off
+                              :show-grid? true
+                              :model model)
+                ;;(.putClientProperty "terminateEditOnFocusLost" true)
+                (.setDefaultRenderer Object (cell-renderer))
+                (.setDefaultEditor Object (cell-editor editable-getter))
+                (.setCellSelectionEnabled true)
+                (.setGridColor (color/color "lightgray"))
+                (.setRowHeight 20))]
+    (doto (ss/scrollable table)
+      (.setRowHeaderView (table/row-header table))
+      )))
 
 
 (defn- status-line-text [{:keys [graph cell-id error?]}]
@@ -129,7 +131,7 @@
 (defn update-status-area! [status-area error-text-area grid graph]
   (let [[row col] (table/selected-cell grid)]
     (if (and row col)
-      (let [cell-id                                    (graph/coords->id row (dec col))
+      (let [cell-id                                    (graph/coords->id row col)
             {:rakk/keys [error? error] :as error-info} (rakk/error-info graph cell-id)]
         (ss/value! status-area
                    {:status-line     (status-line-text {:graph   graph
@@ -165,10 +167,9 @@
            (ss/config! code-editor
                        :text      ""
                        :editable? false)
-           (let [[row col] selected]
-             (ss/config! code-editor
-                         :text      (editable-getter [row (dec col)])
-                         :editable? true))))))
+           (ss/config! code-editor
+                       :text      (editable-getter selected)
+                       :editable? true)))))
 
     (keymap/map-key grid "meta META" common/nothing)
 
@@ -186,10 +187,10 @@
     ;;listen to ENTER to update cell being edited
     (keymap/map-key code-editor "ENTER"
                     (fn [_]
-                      (let [[row col] (table/selected-cell grid)]
+                      (let [row-col (table/selected-cell grid)]
                         (cfuture
-                         (cell-setter [row (dec col)] (ss/value code-editor))
-                         (ss/invoke-later (table/set-selection! grid [row col])))))
+                         (cell-setter row-col (ss/value code-editor))
+                         (ss/invoke-later (table/set-selection! grid row-col)))))
                     :scope :self)
 
 
@@ -261,7 +262,7 @@
                                             :center
                                             (ss/border-panel
                                              :north  (code-editor/code-editor)
-                                             :center (ss/scrollable grid))
+                                             :center grid)
                                             :south (status-area))
                                   :on-close :dispose)]
     (wire! {:frame           frame
