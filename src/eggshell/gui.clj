@@ -5,6 +5,7 @@
             [seesaw.chooser :as chooser]
             [seesaw.border :as border]
             [seesaw.color :as color]
+            [seesaw.border :as border]
             [seesaw.dev :as dev]
             [eggshell.graph :as graph]
             [rakk.core :as rakk]
@@ -144,9 +145,25 @@
                   :error-text-area "No errors"}))))
 
 
+(defn- update-code-editor! [code-editor cell-id-label grid editable-getter]
+  (let [selected (table/selected-cell grid)]
+         (if-not selected
+           (do
+             (ss/value! cell-id-label "N/A")
+             (ss/config! code-editor
+                         :text      ""
+                         :editable? false))
+           (do
+             (ss/value! cell-id-label (str (name (graph/coords->id (first selected) (second selected)))
+                                           " ="))
+             (ss/config! code-editor
+                         :text      (editable-getter selected)
+                         :editable? true)))))
+
+
 (defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
   (let [{:keys [load-button save-button deps-button aliases-button
-                code-editor grid
+                cell-id-label code-editor grid
                 status-area status-line error-area error-text-area]}
         (ss/group-by-id frame)
         graph (::e/graph @state-atom)]
@@ -162,14 +179,7 @@
     (table/listen-selection
      grid
      (fn [_]
-       (let [selected (table/selected-cell grid)]
-         (if-not selected
-           (ss/config! code-editor
-                       :text      ""
-                       :editable? false)
-           (ss/config! code-editor
-                       :text      (editable-getter selected)
-                       :editable? true)))))
+       (update-code-editor! code-editor cell-id-label grid editable-getter)))
 
     (keymap/map-key grid "meta META" common/nothing)
 
@@ -261,7 +271,10 @@
                                             :north (toolbar)
                                             :center
                                             (ss/border-panel
-                                             :north  (code-editor/code-editor)
+                                             :north  (ss/border-panel
+                                                      :west   (ss/label :id :cell-id-label :font defaults/mono-font
+                                                                        :border (border/empty-border :left 10))
+                                                      :center (code-editor/code-editor))
                                              :center grid)
                                             :south (status-area))
                                   :on-close :dispose)]

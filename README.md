@@ -12,7 +12,7 @@ A Clojure-driven spreadsheet
 - [ ] (WIP) Code editor: parinfer
 - [x] Cell editing: design interaction with code editor, F2
 - [ ] Cell editing: sync editor with cell display, maybe overwrite when in cell
-- [ ] Grid: proper row header
+- [x] Grid: proper row header
 - [x] Errors: error handling in cells (and GUI to diplay stacktraces)
 - [x] Errors: handle compile errors in cells
 - [ ] autofill: fill cells by increasing numbers in cell references in code
@@ -28,18 +28,19 @@ A Clojure-driven spreadsheet
 
 ## TODO (polish)
 
+- [ ] user-visible logging
+- [ ] show pretty-printed value in error area when there is no error
+- [x] show cell id on the left of code editor
+- [ ] Row header: resize row height uniformly and individually
+- [ ] provide a way to make a cell value `nil` and a way to make it `""`
 - [x] Aliases: prevent opening more than one frame
 - [ ] Aliases: autocomplete??
 - [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
 - [ ] save/load column widths
 - [ ] trace errors with arrows
-- [ ] user-visible logging
 - [ ] maybe merge interface for deps and aliases?
-- [ ] show value in error area when there is no error
-- [ ] show cell id on the left of code editor
 - [ ] re-used editor for deps should be wired for newlines etc
 - [ ] deps: disable all while working
-- [ ] provide a way to make a cell value `nil` and a way to make it `""`
 
 ## TODO (advanced)
 
@@ -53,6 +54,7 @@ A Clojure-driven spreadsheet
 - [ ] Fix calculations happening on the swing thread
 - [ ] Fix save/load after state refactoring
 - [x] Once you've entered a function in a cell, you can't replace it with a scalar value
+- [ ] Having lots of rows make startup slow because row header doesn't seem to be lazy
 
 ## License
 
