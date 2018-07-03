@@ -53,6 +53,9 @@ A Clojure-driven spreadsheet
 
 ## TODO (advanced)
 
+- [ ] lazy graph
+- [ ] whole-column functions
+- [ ] non-expanded range dependencies
 - [ ] export spreadsheet as some sort of Clojure code
 - [ ] some meta madness like spreadsheet-in-a-cell
 
