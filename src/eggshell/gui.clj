@@ -178,6 +178,12 @@
         (ss/group-by-id frame)
         graph (::e/graph @state-atom)]
 
+    ;;focus on grid when window is ready
+    (ss/listen frame :window-opened
+               (fn [_]
+                 (table/set-selection! grid [0 0])
+                 (ss/request-focus! grid)))
+
     ;;update table when grid graph changes
     (add-watch state-atom :kk
                (fn [_ _ _ _]
