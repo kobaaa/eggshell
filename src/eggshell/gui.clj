@@ -63,8 +63,7 @@
     (getColumnCount [] 50 ;;702
       ) ;; excel has 16384
 
-    (getRowCount [] 5000 ;;1048576
-      )
+    (getRowCount [] 1048576)
 
     (isCellEditable [row col]
       true)
@@ -84,19 +83,20 @@
 
 
 (defn grid [model editable-getter]
-  (let [table (doto (ss/table :id :grid
-                              :auto-resize :off
-                              :show-grid? true
-                              :model model)
-                ;;(.putClientProperty "terminateEditOnFocusLost" true)
-                (.setDefaultRenderer Object (cell-renderer))
-                (.setDefaultEditor Object (cell-editor editable-getter))
-                (.setCellSelectionEnabled true)
-                (.setGridColor (color/color "lightgray"))
-                (.setRowHeight 20))]
-    (doto (ss/scrollable table)
-      (.setRowHeaderView (table/row-header table))
-      )))
+  (let [table      (doto (ss/table :id :grid
+                                   :auto-resize :off
+                                   :show-grid? true
+                                   :model model)
+                     ;;(.putClientProperty "terminateEditOnFocusLost" true)
+                     (.setDefaultRenderer Object (cell-renderer))
+                     (.setDefaultEditor Object (cell-editor editable-getter))
+                     (.setCellSelectionEnabled true)
+                     (.setGridColor (color/color "lightgray"))
+                     (.setRowHeight 20))
+        scrollable (doto (ss/scrollable table)
+                     (.setRowHeaderView (table/row-header table)))]
+    (-> scrollable .getRowHeader (.setPreferredSize (java.awt.Dimension. 60 450)))
+    scrollable))
 
 
 (defn- status-line-text [{:keys [graph cell-id error?]}]

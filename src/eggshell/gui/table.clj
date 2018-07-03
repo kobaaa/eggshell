@@ -62,26 +62,29 @@
                  (.setForeground (.getForeground header))
                  (.setFont (.getFont header))
                  (.setDoubleBuffered true))]
-   (reify javax.swing.ListCellRenderer
-     (getListCellRendererComponent [this list value index selected? has-focus?]
-       (doto label
-         (.setText value)
-         (.setPreferredSize nil)
-         (.setPreferredSize
-          (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table index))))
-       ;;(.firePropertyChange list "cellRenderer" 0 1)
-       label))))
+    (proxy [javax.swing.table.DefaultTableCellRenderer] []
+      (getTableCellRendererComponent [table value is-selected has-focus row col]
+        (doto label
+          (.setText (str value))
+          ;; (.setPreferredSize nil)
+          ;; (.setPreferredSize
+          ;;  (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table row)))
+          )))))
+
 
 (defn row-header [^javax.swing.JTable table]
-  (let [model (reify javax.swing.ListModel
-                (getElementAt [_ index] (str index))
-                (getSize [_] (.getRowCount table))
-
-                (addListDataListener [_ _])
-                (removeListDataListener [_ _]))]
-    (doto (javax.swing.JList. model)
-      (.setOpaque false)
-      (.setFixedCellWidth 50)
-      (.setCellRenderer (row-header-renderer table))
-      (.setForeground (.getForeground table))
-      (.setBackground (.getBackground table)))))
+  (doto (ss/table
+         :enabled? false
+         :model
+         (proxy [javax.swing.table.DefaultTableModel] []
+           (getColumnCount [] 1)
+           (getRowCount [] (.getRowCount table))
+           (isCellEditable [row col] false)
+           (getColumnName [col] "row")
+           (getValueAt [row col] row)
+           (setValueAt [value row col])
+           (getColumnClass [^Integer c] Object)))
+    (.setRowHeight (.getRowHeight table))
+    (.setDefaultRenderer Object (row-header-renderer table))
+    ;;(.setPreferredSize (java.awt.Dimension. 50 450))
+    ))
