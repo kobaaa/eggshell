@@ -22,6 +22,10 @@
 
 (defn wire! [frame apply-fn]
   (let [{:keys [code-editor cancel-button apply-button ok-button]} (ss/group-by-id frame)]
+
+    (keymap/map-key code-editor "ENTER"
+                    (fn [_] (code-editor/insert-new-line! code-editor)))
+
     (keymap/map-key frame "ESCAPE" (fn [_] (ss/dispose! frame)))
 
     (ss/listen cancel-button :action (fn [_] (ss/dispose! frame)))
