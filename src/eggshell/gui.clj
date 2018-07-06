@@ -283,7 +283,8 @@
                           (controller/load-egg file {:graph-atom (::e/graph @state-atom)
                                                      :grid       grid}))
         layer           (-> (layer/grid cell-getter cell-setter)
-                            (layer/image-render))
+                            (layer/image-render)
+                            (layer/errors))
         grid            (make-grid layer editable-getter)
         frame           (ss/frame :title "eggshell"
                                   :content (ss/border-panel
