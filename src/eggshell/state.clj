@@ -9,7 +9,8 @@
    ["egg  eggshell.api"
     "math eggshell.api.math"
     "str  clojure.string"
-    "set  clojure.set"]))
+    "set  clojure.set"
+    "io   clojure.java.io"]))
 
 
 (def egg-atom (atom {::e/graph   (graph/make)

@@ -19,6 +19,7 @@
             [eggshell.gui.aliases :as aliases]
             [eggshell.gui.deps :as deps]
             [eggshell.state :as state]
+            [eggshell.layer :as layer]
             [eggshell.util :as util :refer [cfuture]]
             [clojure.repl :as repl]
             [clojure.string :as str]
@@ -82,13 +83,13 @@
       Object)))
 
 
-(defn grid [model editable-getter]
+(defn make-grid [layer editable-getter]
   (let [table      (doto (ss/table :id :grid
                                    :auto-resize :off
                                    :show-grid? true
-                                   :model model)
+                                   :model (layer/to-model layer))
                      ;;(.putClientProperty "terminateEditOnFocusLost" true)
-                     (.setDefaultRenderer Object (cell-renderer))
+                     (.setDefaultRenderer Object (layer/to-cell-renderer layer))
                      (.setDefaultEditor Object (cell-editor editable-getter))
                      (.setCellSelectionEnabled true)
                      (.setGridColor (color/color "lightgray"))
@@ -96,7 +97,8 @@
         scrollable (doto (ss/scrollable table)
                      (.setRowHeaderView (table/row-header table)))]
     (-> scrollable .getRowHeader (.setPreferredSize (java.awt.Dimension. 60 450)))
-    scrollable))
+    {:scroll-pane scrollable
+     :table       table}))
 
 
 (defn- status-line-text [{:keys [graph cell-id error?]}]
@@ -280,8 +282,9 @@
         egg-loader      (fn [file grid]
                           (controller/load-egg file {:graph-atom (::e/graph @state-atom)
                                                      :grid       grid}))
-        model           (table-model cell-getter cell-setter)
-        grid            (grid model editable-getter)
+        layer           (-> (layer/grid cell-getter cell-setter)
+                            (layer/image-render))
+        grid            (make-grid layer editable-getter)
         frame           (ss/frame :title "eggshell"
                                   :content (ss/border-panel
                                             :north (toolbar)
@@ -293,12 +296,12 @@
                                                                         :text "N/A ="
                                                                         :border (border/empty-border :left 14))
                                                       :center (code-editor/code-editor))
-                                             :center grid)
+                                             :center (:scroll-pane grid))
                                             :south (status-area))
                                   :on-close :dispose)]
     (wire! {:frame           frame
             :state-atom      state-atom
-            :table-model     model
+            :table-model     (.getModel (:table grid))
             :cell-setter     cell-setter
             :editable-getter editable-getter
             :egg-loader      egg-loader})

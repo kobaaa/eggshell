@@ -37,7 +37,7 @@ A Clojure-driven spreadsheet
 ## TODO (polish)
 
 - [ ] user-visible logging
-- [ ] deps: re-used editor for deps should be wired for newlines etc
+- [x] deps: re-used editor for deps should be wired for newlines etc
 - [ ] deps: disable all while working
 - [x] show pretty-printed value in error area when there is no error
 - [x] show cell id on the left of code editor
@@ -61,7 +61,7 @@ A Clojure-driven spreadsheet
 
 ## Bugs
 
-- [ ] Having lots of rows make startup slow because row header doesn't seem to be lazy
+- [x] Having lots of rows make startup slow because row header doesn't seem to be lazy
 - [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
 - [x] Fix selection after cell value has been updated
 - [ ] Fix calculations happening on the swing thread
