@@ -69,9 +69,11 @@
 
 
 (defn set-aliases! [state-atom aliases]
+  (prn 'add-aliases! (.getName (Thread/currentThread)))
   (doseq [ns (map second (parse-aliases aliases))]
     (println "Requiring" ns)
-    (require (symbol ns)))
+    (try (require (symbol ns))
+         (catch Exception _)))
   (swap! state-atom
          #(-> %
               (assoc ::e/aliases aliases)
