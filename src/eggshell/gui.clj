@@ -89,20 +89,35 @@
     (paintComponent [g]
       (let [[row col] (table/selected-cell table)]
         (when (and row col)
-          (let [rect (javax.swing.SwingUtilities/convertRectangle
-                      table
-                      (.getCellRect table row col false)
-                      root-pane)]
+          (let [table-rect (javax.swing.SwingUtilities/getLocalBounds table) ;(javax.swing.SwingUtilities/calculateInnerArea table nil)
+                cell-rect  (javax.swing.SwingUtilities/convertRectangle
+                            table
+                            (.getCellRect table row col false)
+                            root-pane)]
+            ;;(prn (str table-rect))
             (doto g
+              ;;(.setColor (color/color :red))
+              ;;(.draw table-rect)
+              ;;(.setClip table-rect)
               (.setStroke (java.awt.BasicStroke. 2))
-              (.setColor (color/color :grey))
-              (.drawRect (dec (.-x rect))
-                         (dec (.-y rect))
-                         (+ (.-width rect) 2)
-                         (+ (.-height rect) 2))
-              (.fillRect (+ (.-x rect) (.-width rect) -2)
-                         (+ (.-y rect) (.-height rect) -2)
-                         5 5))))))))
+              (.setColor (color/color "#247247"))
+              (.drawRect (dec (.-x cell-rect))
+                         (dec (.-y cell-rect))
+                         (+ (.-width cell-rect) 2)
+                         (+ (.-height cell-rect) 2))
+              (.fillRect (+ (.-x cell-rect) (.-width cell-rect) -2)
+                         (+ (.-y cell-rect) (.-height cell-rect) -2)
+                         5 5)
+              (.setColor (color/color :white))
+              (.setStroke (java.awt.BasicStroke. 1))
+              (.drawLine (+ (.-x cell-rect) (.-width cell-rect))
+                         (+ (.-y cell-rect) (.-height cell-rect) -3)
+                         (+ (.-x cell-rect) (.-width cell-rect) 1)
+                         (+ (.-y cell-rect) (.-height cell-rect) -3))
+              (.drawLine (+ (.-x cell-rect) (.-width cell-rect) -3)
+                         (+ (.-y cell-rect) (.-height cell-rect))
+                         (+ (.-x cell-rect) (.-width cell-rect) -3)
+                         (+ (.-y cell-rect) (.-height cell-rect) 1)))))))))
 
 
 (defn make-grid [layer editable-getter]
@@ -115,7 +130,7 @@
                      (.setDefaultRenderer Object (layer/to-cell-renderer layer))
                      (.setDefaultEditor Object (cell-editor editable-getter))
                      (.setCellSelectionEnabled true)
-                     (.setGridColor (color/color "lightgray"))
+                     (.setGridColor (color/color "#cecece"))
                      (.setRowHeight 20))
         scrollable (doto (ss/scrollable table :id :grid-scroll)
                      (.setRowHeaderView (table/row-header table)))]
