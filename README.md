@@ -50,6 +50,7 @@ A Clojure-driven spreadsheet
 - [ ] trace errors with arrows
 - [ ] maybe merge interface for deps and aliases?
 - [ ] inputs with data structure literals should maintain their formatting for better editing
+- [ ] highlight focused column (as with focused row)
 
 ## TODO (advanced)
 
