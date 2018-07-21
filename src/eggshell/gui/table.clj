@@ -63,13 +63,14 @@
                  (.setFont (.getFont header))
                  (.setDoubleBuffered true))]
     (proxy [javax.swing.table.DefaultTableCellRenderer] []
-      (getTableCellRendererComponent [table value is-selected has-focus row col]
-        (doto label
-          (.setText (str value))
-          ;; (.setPreferredSize nil)
-          ;; (.setPreferredSize
-          ;;  (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table row)))
-          )))))
+      (getTableCellRendererComponent [_ value is-selected has-focus row col]
+        (ss/config! label
+                    :text (str value)
+                    :background (if (= row (first (selected-cell table))) :lightgreen "#e9e9e9"))
+        ;; (.setPreferredSize nil)
+        ;; (.setPreferredSize
+        ;;  (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table row)))
+        ))))
 
 
 (defn row-header [^javax.swing.JTable table]
