@@ -33,6 +33,8 @@ A Clojure-driven spreadsheet
 - [ ] Aliases: user input validation with meaningful errors
 - [x] deps: all-lib for adding dependencies on the fly + GUI + saving as part of files
 - [ ] named cells?
+- [ ] fix glass pane clipping
+- [ ] multiple selections rendered ok, but confusing behaviour when starting to edit
 
 ## TODO (polish)
 

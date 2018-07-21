@@ -7,6 +7,9 @@
   (let [selected [(.getSelectedRow table) (.getSelectedColumn table)]]
     (when-not (= [-1 -1] selected) selected)))
 
+(defn selected-cells [^javax.swing.JTable table]
+  {:selected-rows    (set (.getSelectedRows table))
+   :selected-columns (set (.getSelectedColumns table))})
 
 (defn set-selection! [^javax.swing.JTable table [row col]]
   (.setRowSelectionInterval table row row)

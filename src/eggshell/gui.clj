@@ -84,40 +84,60 @@
       Object)))
 
 
+(defn- draw-focus-box [table root-pane g]
+  (let [[row col] (table/selected-cell table)]
+    (when (and row col)
+      (let [table-rect (javax.swing.SwingUtilities/getLocalBounds table) ;(javax.swing.SwingUtilities/calculateInnerArea table nil)
+            cell-rect  (javax.swing.SwingUtilities/convertRectangle
+                        table
+                        (.getCellRect table row col false)
+                        root-pane)]
+        ;;(prn (str table-rect))
+        (doto g
+          ;;(.setColor (color/color :red))
+          ;;(.draw table-rect)
+          ;;(.setClip table-rect)
+          (.setStroke (java.awt.BasicStroke. 2))
+          (.setColor (color/color "#247247"))
+          (.drawRect (dec (.-x cell-rect))
+                     (dec (.-y cell-rect))
+                     (+ (.-width cell-rect) 2)
+                     (+ (.-height cell-rect) 2))
+          (.fillRect (+ (.-x cell-rect) (.-width cell-rect) -2)
+                     (+ (.-y cell-rect) (.-height cell-rect) -2)
+                     5 5)
+          (.setColor (color/color :white))
+          (.setStroke (java.awt.BasicStroke. 1))
+          (.drawLine (+ (.-x cell-rect) (.-width cell-rect))
+                     (+ (.-y cell-rect) (.-height cell-rect) -3)
+                     (+ (.-x cell-rect) (.-width cell-rect) 1)
+                     (+ (.-y cell-rect) (.-height cell-rect) -3))
+          (.drawLine (+ (.-x cell-rect) (.-width cell-rect) -3)
+                     (+ (.-y cell-rect) (.-height cell-rect))
+                     (+ (.-x cell-rect) (.-width cell-rect) -3)
+                     (+ (.-y cell-rect) (.-height cell-rect) 1)))))))
+
+
+(defn- draw-selections [table root-pane g]
+  (let [{:keys [selected-rows selected-columns] :as selected} (table/selected-cells table)
+        focused-cell                                          (table/selected-cell table)]
+    (doseq [row selected-rows]
+      (doseq [col selected-columns]
+        (when-not (= focused-cell [row col])
+          (let [cell-rect (javax.swing.SwingUtilities/convertRectangle
+                           table
+                           (.getCellRect table row col false)
+                           root-pane)]
+            (doto g
+              (.setColor (color/color "#add8e6" 64))
+              (.fill cell-rect))))))))
+
+
 (defn- glass-pane [root-pane table]
   (proxy [javax.swing.JComponent] []
     (paintComponent [g]
-      (let [[row col] (table/selected-cell table)]
-        (when (and row col)
-          (let [table-rect (javax.swing.SwingUtilities/getLocalBounds table) ;(javax.swing.SwingUtilities/calculateInnerArea table nil)
-                cell-rect  (javax.swing.SwingUtilities/convertRectangle
-                            table
-                            (.getCellRect table row col false)
-                            root-pane)]
-            ;;(prn (str table-rect))
-            (doto g
-              ;;(.setColor (color/color :red))
-              ;;(.draw table-rect)
-              ;;(.setClip table-rect)
-              (.setStroke (java.awt.BasicStroke. 2))
-              (.setColor (color/color "#247247"))
-              (.drawRect (dec (.-x cell-rect))
-                         (dec (.-y cell-rect))
-                         (+ (.-width cell-rect) 2)
-                         (+ (.-height cell-rect) 2))
-              (.fillRect (+ (.-x cell-rect) (.-width cell-rect) -2)
-                         (+ (.-y cell-rect) (.-height cell-rect) -2)
-                         5 5)
-              (.setColor (color/color :white))
-              (.setStroke (java.awt.BasicStroke. 1))
-              (.drawLine (+ (.-x cell-rect) (.-width cell-rect))
-                         (+ (.-y cell-rect) (.-height cell-rect) -3)
-                         (+ (.-x cell-rect) (.-width cell-rect) 1)
-                         (+ (.-y cell-rect) (.-height cell-rect) -3))
-              (.drawLine (+ (.-x cell-rect) (.-width cell-rect) -3)
-                         (+ (.-y cell-rect) (.-height cell-rect))
-                         (+ (.-x cell-rect) (.-width cell-rect) -3)
-                         (+ (.-y cell-rect) (.-height cell-rect) 1)))))))))
+      (draw-selections table root-pane g)
+      (draw-focus-box table root-pane g))))
 
 
 (defn make-grid [layer editable-getter]
