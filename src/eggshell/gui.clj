@@ -32,6 +32,7 @@
     (proxy [javax.swing.DefaultCellEditor] [text-field]
       (getTableCellEditorComponent [table value is-selected row col]
         (ss/config! text-field
+                    :border nil
                     :font defaults/mono-font
                     :text (editable-getter [row col])))
       (shouldSelectCell [_] true))))
@@ -83,18 +84,40 @@
       Object)))
 
 
+(defn- glass-pane [root-pane table]
+  (proxy [javax.swing.JComponent] []
+    (paintComponent [g]
+      (let [[row col] (table/selected-cell table)]
+        (when (and row col)
+          (let [rect (javax.swing.SwingUtilities/convertRectangle
+                      table
+                      (.getCellRect table row col false)
+                      root-pane)]
+            (doto g
+              (.setStroke (java.awt.BasicStroke. 2))
+              (.setColor (color/color :grey))
+              (.drawRect (dec (.-x rect))
+                         (dec (.-y rect))
+                         (+ (.-width rect) 2)
+                         (+ (.-height rect) 2))
+              (.fillRect (+ (.-x rect) (.-width rect) -2)
+                         (+ (.-y rect) (.-height rect) -2)
+                         5 5))))))))
+
+
 (defn make-grid [layer editable-getter]
-  (let [table      (doto (ss/table :id :grid
-                                   :auto-resize :off
-                                   :show-grid? true
-                                   :model (layer/to-model layer))
+  (let [table      (doto (ss/table
+                          :id :grid
+                          :auto-resize :off
+                          :show-grid? true
+                          :model (layer/to-model layer))
                      ;;(.putClientProperty "terminateEditOnFocusLost" true)
                      (.setDefaultRenderer Object (layer/to-cell-renderer layer))
                      (.setDefaultEditor Object (cell-editor editable-getter))
                      (.setCellSelectionEnabled true)
                      (.setGridColor (color/color "lightgray"))
                      (.setRowHeight 20))
-        scrollable (doto (ss/scrollable table)
+        scrollable (doto (ss/scrollable table :id :grid-scroll)
                      (.setRowHeaderView (table/row-header table)))]
     (-> scrollable .getRowHeader (.setPreferredSize (java.awt.Dimension. 60 450)))
     {:scroll-pane scrollable
@@ -197,7 +220,8 @@
     (table/listen-selection
      grid
      (fn [_]
-       (update-code-editor! code-editor cell-id-label grid editable-getter)))
+       (update-code-editor! code-editor cell-id-label grid editable-getter)
+       (.repaint frame))) ;;TODO also on column/row resize, and on scroll
 
     (keymap/map-key grid "meta META" common/nothing)
 
@@ -300,6 +324,10 @@
                                              :center (:scroll-pane grid))
                                             :south (status-area))
                                   :on-close :dispose)]
+
+    (-> frame .getRootPane (.setGlassPane (glass-pane (.getRootPane frame) (:table grid))))
+    (-> frame .getRootPane .getGlassPane (.setVisible true))
+
     (wire! {:frame           frame
             :state-atom      state-atom
             :table-model     (.getModel (:table grid))
