@@ -87,11 +87,6 @@
 (defn- convert-rect [source rect dest]
   (javax.swing.SwingUtilities/convertRectangle source rect dest))
 
-(defn- visible-rect [component]
-  (let [rect (java.awt.Rectangle.)]
-    (.computeVisibleRect component rect)
-    rect))
-
 (defn- translate-rect [rect dx dy]
   (let [rect2 (java.awt.Rectangle. rect)]
     (.translate rect2 dx dy)
@@ -143,7 +138,7 @@
 (defn- glass-pane [root-pane table]
   (proxy [javax.swing.JComponent] []
     (paintComponent [g]
-      (let [table-rect (convert-rect table (visible-rect table) root-pane)]
+      (let [table-rect (convert-rect table (.getVisibleRect table) root-pane)]
         (.setClip g table-rect)
         (draw-selections table root-pane g)
         ;;be a bit more permissive because the focus box can appear outside the bounds of the table by a couple of pixels
