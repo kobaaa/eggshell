@@ -91,22 +91,21 @@
         ))))
 
 (defn bottom-edge-rect [r]
-  (java.awt.Rectangle. (.-x r) (- (.-y r) 2)
-                       (.-width r) 4))
+  (java.awt.Rectangle. (.-x r) (- (.-y r) 4)
+                       (.-width r) 7))
 
 
 (defn- row-header-pointer-handler [mouse-event]
-  ;;(prn (str mouse-event))
   (let [table (.getSource mouse-event)
+        root  (javax.swing.SwingUtilities/getRoot table)
         rects (map #(bottom-edge-rect (cell-rect table [% 0]))
                    (apply range (visible-rows table)))
         point (.getPoint mouse-event)]
-    (comment
-     (if (some #(.contains % point) rects)
-       (do (prn 'CONTAINS!)
-           (.setCursor table (cursor/cursor :move)))
-       (do (prn 'NOT!)
-           (.setCursor table (cursor/cursor :default)))))))
+
+    ;;for some reason setting the cursor on table does not work
+    (if (some #(.contains % point) rects)
+      (.setCursor root (cursor/cursor :s-resize))
+      (.setCursor root (cursor/cursor :default)))))
 
 
 (defn row-header [^javax.swing.JTable table]
