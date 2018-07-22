@@ -102,6 +102,7 @@
 
 ;; com.hypirion/clj-xchart {:mvn/version "0.2.0"}
 ;; chart com.hypirion.clj-xchart
+
 (comment
   (let [r (java.util.Random. 42)]
     (chart/as-buffered-image
@@ -110,11 +111,33 @@
                  :y (mapv #(+ % (* 3 (.nextDouble r)))
                           (range 10))}
        "Tyrone" {:x (range 10)
-                 :y a1}}
-      {:title "Longest running distance"
-       :x-axis {:title "Months (since start)"}
-       :y-axis {:title "Distance"
+                 :y b1}}
+      {:title  b2
+       :width  400
+       :height 300
+       :x-axis {:title b3}
+       :y-axis {:title b4
                 :decimal-pattern "##.## km"}
-       :theme :matlab}))))
+       :theme  :ggplot2}))))
 
-;;then, in a1: [50 30 30 40 50 20 70 80 90 60]
+;;then, in b1: [50 35 35 40 30 40 70 80 75 70]
+;;b2: Longest running distance
+;;b3: Months (since start)
+;;b4: Distance
+
+
+;;;...use something like this for sparklines:
+
+(comment
+ (chart/as-buffered-image
+  (chart/xy-chart
+   {"Maxime" {:x (range 10)
+              :y b1
+              :style {:marker-type :none}}}
+   {:width 400
+    :height 50
+    :chart {:padding 0}
+    :plot {:background-color :white :content-size 1}
+    :legend {:visible? false}
+    :axis {:ticks {:visible? false}}
+    :theme :ggplot2})))
