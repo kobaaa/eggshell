@@ -91,38 +91,58 @@
         ))))
 
 (defn bottom-edge-rect [r]
-  (java.awt.Rectangle. (.-x r) (- (.-y r) 4)
+  (java.awt.Rectangle. (.-x r) (+ (.-height r) (.-y r) -4)
                        (.-width r) 7))
 
 
-(defn- row-header-pointer-handler [mouse-event]
-  (let [table (.getSource mouse-event)
-        root  (javax.swing.SwingUtilities/getRoot table)
-        rects (map #(bottom-edge-rect (cell-rect table [% 0]))
-                   (apply range (visible-rows table)))
-        point (.getPoint mouse-event)]
+(defn- row-header-pointer-handler [row-index mouse-event]
+  (let [table         (.getSource mouse-event)
+        root          (javax.swing.SwingUtilities/getRoot table)
+        viz-rows      (apply range (visible-rows table))
+        rects         (zipmap (map #(bottom-edge-rect (cell-rect table [% 0])) viz-rows)
+                              viz-rows)
+        point         (.getPoint mouse-event)
+        matching-rect (first (filter #(.contains % point) (keys rects)))
+        matching-row  (get rects matching-rect)]
 
     ;;for some reason setting the cursor on table does not work
-    (if (some #(.contains % point) rects)
-      (.setCursor root (cursor/cursor :s-resize))
-      (.setCursor root (cursor/cursor :default)))))
+    (if matching-rect
+      (do
+        (reset! row-index matching-row)
+        (.setCursor root (cursor/cursor :s-resize)))
+      (do
+        (reset! row-index nil)
+        (.setCursor root (cursor/cursor :default))))))
 
 
 (defn row-header [^javax.swing.JTable table]
-  (doto (ss/table
-         :enabled? false
-         :cursor :move
-         :model
-         (proxy [javax.swing.table.DefaultTableModel] []
-           (getColumnCount [] 1)
-           (getRowCount [] (.getRowCount table))
-           (isCellEditable [row col] false)
-           (getColumnName [col] "row")
-           (getValueAt [row col] row)
-           (setValueAt [value row col])
-           (getColumnClass [^Integer c] Object))
-         :listen [:mouse-moved row-header-pointer-handler])
-    (.setRowHeight (.getRowHeight table))
-    (.setDefaultRenderer Object (row-header-renderer table))
-    ;;(.setPreferredSize (java.awt.Dimension. 50 450))
-    ))
+  (let [dragged-start (atom nil)
+        row-index     (atom nil)]
+    (doto (ss/table
+           :enabled? false
+           :cursor :move
+           :model
+           (proxy [javax.swing.table.DefaultTableModel] []
+             (getColumnCount [] 1)
+             (getRowCount [] (.getRowCount table))
+             (isCellEditable [row col] false)
+             (getColumnName [col] "row")
+             (getValueAt [row col] row)
+             (setValueAt [value row col])
+             (getColumnClass [^Integer c] Object))
+           :listen [:mouse-moved    (partial row-header-pointer-handler row-index)
+                    :mouse-pressed  (fn [e] (reset! dragged-start (.getY e)))
+                    :mouse-released (fn [e]
+                                      (reset! dragged-start nil)
+                                      (reset! row-index nil))
+                    :mouse-dragged  (fn [e]
+                                      (when-let [row @row-index]
+                                        (let [d          (- (.getY e) @dragged-start)
+                                              new-height (max 20 (+ (.getRowHeight table row) d))]
+                                          (.setRowHeight table row new-height)
+                                          (.setRowHeight (.getSource e) row new-height)
+                                          (reset! dragged-start (.getY e)))))])
+      (.setRowHeight (.getRowHeight table))
+      (.setDefaultRenderer Object (row-header-renderer table))
+      ;;(.setPreferredSize (java.awt.Dimension. 50 450))
+      )))
