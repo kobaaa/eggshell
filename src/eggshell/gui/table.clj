@@ -1,19 +1,34 @@
 (ns eggshell.gui.table
   (:require [seesaw.core :as ss]
-            [seesaw.border :as border]))
+            [seesaw.border :as border]
+            [seesaw.cursor :as cursor]))
 
 
 (defn selected-cell [^javax.swing.JTable table]
   (let [selected [(.getSelectedRow table) (.getSelectedColumn table)]]
     (when-not (= [-1 -1] selected) selected)))
 
+
 (defn selected-cells [^javax.swing.JTable table]
   {:selected-rows    (set (.getSelectedRows table))
    :selected-columns (set (.getSelectedColumns table))})
 
+
 (defn set-selection! [^javax.swing.JTable table [row col]]
   (.setRowSelectionInterval table row row)
   (.setColumnSelectionInterval table col col))
+
+
+(defn visible-rows [^javax.swing.JTable table]
+  (let [rect    (.getVisibleRect table)
+        min-row (.rowAtPoint table (.getLocation rect))
+        _       (.translate rect 0 (.-height rect))
+        max-row (.rowAtPoint table (.getLocation rect))]
+    [min-row max-row]))
+
+
+(defn cell-rect [^javax.swing.JTable table [row col]]
+  (.getCellRect table row col false))
 
 
 (defn listen-selection [^javax.swing.JTable table f]
@@ -75,10 +90,29 @@
         ;;  (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table row)))
         ))))
 
+(defn bottom-edge-rect [r]
+  (java.awt.Rectangle. (.-x r) (- (.-y r) 2)
+                       (.-width r) 4))
+
+
+(defn- row-header-pointer-handler [mouse-event]
+  ;;(prn (str mouse-event))
+  (let [table (.getSource mouse-event)
+        rects (map #(bottom-edge-rect (cell-rect table [% 0]))
+                   (apply range (visible-rows table)))
+        point (.getPoint mouse-event)]
+    (comment
+     (if (some #(.contains % point) rects)
+       (do (prn 'CONTAINS!)
+           (.setCursor table (cursor/cursor :move)))
+       (do (prn 'NOT!)
+           (.setCursor table (cursor/cursor :default)))))))
+
 
 (defn row-header [^javax.swing.JTable table]
   (doto (ss/table
          :enabled? false
+         :cursor :move
          :model
          (proxy [javax.swing.table.DefaultTableModel] []
            (getColumnCount [] 1)
@@ -87,7 +121,8 @@
            (getColumnName [col] "row")
            (getValueAt [row col] row)
            (setValueAt [value row col])
-           (getColumnClass [^Integer c] Object)))
+           (getColumnClass [^Integer c] Object))
+         :listen [:mouse-moved row-header-pointer-handler])
     (.setRowHeight (.getRowHeight table))
     (.setDefaultRenderer Object (row-header-renderer table))
     ;;(.setPreferredSize (java.awt.Dimension. 50 450))
