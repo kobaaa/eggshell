@@ -12,8 +12,8 @@ A Clojure-driven spreadsheet
 
 ## TODO (essential)
 
-- [x] Saving
-- [x] Loading
+- [ ] Saving
+- [ ] Loading
 - [x] Cell slices in formulas
 - [ ] main function and package as a jar
 - [x] Code editor: multiline support
@@ -27,6 +27,8 @@ A Clojure-driven spreadsheet
 - [ ] copy/paste cell value, copy/paste cell formula
 - [ ] "Import" or "layer" CSV files
 - [ ] export CSV
+- [ ] Insert row
+- [ ] Insert column
 - [ ] Keyboard shortcuts (for windows too)
 - [x] Aliases for namespaces + GUI + saving as part of files - WIP
 - [x] Aliases: maybe require namespaces?
@@ -43,7 +45,9 @@ A Clojure-driven spreadsheet
 - [ ] deps: disable all while working
 - [x] show pretty-printed value in error area when there is no error
 - [x] show cell id on the left of code editor
-- [ ] Row header: resize row height uniformly and individually
+- [x] Row header: resize row height individually
+- [x] Row header: resize row height uniformly
+- [ ] Row/col resize: double click to change size to content
 - [ ] provide a way to make a cell value `nil` and a way to make it `""`
 - [x] Aliases: prevent opening more than one frame
 - [ ] Aliases: autocomplete??
@@ -53,6 +57,7 @@ A Clojure-driven spreadsheet
 - [ ] maybe merge interface for deps and aliases?
 - [ ] inputs with data structure literals should maintain their formatting for better editing
 - [ ] highlight focused column (as with focused row)
+- [ ] a bit more work on row resize mouse behaviour
 
 ## TODO (advanced)
 
