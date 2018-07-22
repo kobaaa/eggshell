@@ -62,13 +62,14 @@ A Clojure-driven spreadsheet
 
 ## Bugs
 
-- [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
-- [ ] Fix calculations happening on the swing thread
-- [ ] Fix save/load after state refactoring
-- [ ] Try editing some multi-line code and hitting <enter>. The whole
+- [ ] Bug: Cells without deps (such as `(+ 1 2)`) don't get calculated
+- [ ] Bug: Fix calculations happening on the swing thread
+- [ ] Bug: Fix save/load after state refactoring
+- [ ] Bug: Try editing some multi-line code and hitting <enter>. The whole
   grid flickers. If you hold <enter> you hit a concurrency exception
   that reads `java.lang.IllegalArgumentException: Column index out of
   range`.
+- [ ] Bug: Impossible to switch cells out of errored state
 
 ## Done
 
