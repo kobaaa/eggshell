@@ -51,7 +51,6 @@
                                        :else :white)))))
 
 
-
 (defn cell-renderer []
   (proxy [javax.swing.table.DefaultTableCellRenderer] []
     (getTableCellRendererComponent [table value is-selected has-focus row col]
@@ -100,7 +99,7 @@
 (defn- draw-focus-box [table root-pane g]
   (let [[row col] (table/selected-cell table)]
     (when (and row col)
-      (let [cell-rect (convert-rect table (.getCellRect table row col false) root-pane)]
+      (let [cell-rect (convert-rect table (table/cell-rect table [row col]) root-pane)]
         (doto g
           (.setStroke (java.awt.BasicStroke. 2))
           (.setColor (color/color "#247247"))
@@ -129,7 +128,7 @@
     (doseq [row selected-rows]
       (doseq [col selected-columns]
         (when-not (= focused-cell [row col])
-          (let [cell-rect (convert-rect table (.getCellRect table row col false) root-pane)]
+          (let [cell-rect (convert-rect table (table/cell-rect table [row col]) root-pane)]
             (doto g
               (.setColor (color/color "#add8e6" 64))
               (.fill cell-rect))))))))

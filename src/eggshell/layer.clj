@@ -1,8 +1,7 @@
 (ns eggshell.layer
   (:require [eggshell.graph :as graph]
             [eggshell.gui.defaults :as gui.defaults]
-            [seesaw.core :as ss]
-            [seesaw.color :as color])
+            [seesaw.core :as ss])
   (:import [java.awt.image BufferedImage]))
 
 
@@ -25,10 +24,8 @@
      :column-name  (partial graph/idx->column)
      :value        cell-getter
      :set-value!   cell-setter
-     :renderer     (fn [row-col {:keys [render-value ::selected?] :as v}]
-                     (ss/config! label
-                                 :background (when selected? (color/color gui.defaults/selected-color))
-                                 :text render-value))}))
+     :renderer     (fn [row-col {:keys [render-value]}]
+                     (ss/config! label :text render-value))}))
 
 
 (defn errors [{:keys [value renderer] :as layer-below}]
