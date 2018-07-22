@@ -84,19 +84,29 @@
       Object)))
 
 
+(defn- convert-rect [source rect dest]
+  (javax.swing.SwingUtilities/convertRectangle source rect dest))
+
+(defn- visible-rect [component]
+  (let [rect (java.awt.Rectangle.)]
+    (.computeVisibleRect component rect)
+    rect))
+
+(defn- translate-rect [rect dx dy]
+  (let [rect2 (java.awt.Rectangle. rect)]
+    (.translate rect2 dx dy)
+    rect2))
+
+(defn- grow-rect [rect d-width d-height]
+  (let [rect2 (java.awt.Rectangle. rect)]
+    (.setBounds rect2 (.-x rect) (.-y rect) (+ (.-width rect) d-width) (+ (.-height rect) d-height))
+    rect2))
+
 (defn- draw-focus-box [table root-pane g]
   (let [[row col] (table/selected-cell table)]
     (when (and row col)
-      (let [table-rect (javax.swing.SwingUtilities/getLocalBounds table) ;(javax.swing.SwingUtilities/calculateInnerArea table nil)
-            cell-rect  (javax.swing.SwingUtilities/convertRectangle
-                        table
-                        (.getCellRect table row col false)
-                        root-pane)]
-        ;;(prn (str table-rect))
+      (let [cell-rect (convert-rect table (.getCellRect table row col false) root-pane)]
         (doto g
-          ;;(.setColor (color/color :red))
-          ;;(.draw table-rect)
-          ;;(.setClip table-rect)
           (.setStroke (java.awt.BasicStroke. 2))
           (.setColor (color/color "#247247"))
           (.drawRect (dec (.-x cell-rect))
@@ -124,10 +134,7 @@
     (doseq [row selected-rows]
       (doseq [col selected-columns]
         (when-not (= focused-cell [row col])
-          (let [cell-rect (javax.swing.SwingUtilities/convertRectangle
-                           table
-                           (.getCellRect table row col false)
-                           root-pane)]
+          (let [cell-rect (convert-rect table (.getCellRect table row col false) root-pane)]
             (doto g
               (.setColor (color/color "#add8e6" 64))
               (.fill cell-rect))))))))
@@ -136,8 +143,14 @@
 (defn- glass-pane [root-pane table]
   (proxy [javax.swing.JComponent] []
     (paintComponent [g]
-      (draw-selections table root-pane g)
-      (draw-focus-box table root-pane g))))
+      (let [table-rect (convert-rect table (visible-rect table) root-pane)]
+        (.setClip g table-rect)
+        (draw-selections table root-pane g)
+        ;;be a bit more permissive because the focus box can appear outside the bounds of the table by a couple of pixels
+        (.setClip g (-> table-rect
+                        (translate-rect -2 -2)
+                        (grow-rect 5 5)))
+        (draw-focus-box table root-pane g)))))
 
 
 (defn make-grid [layer editable-getter]

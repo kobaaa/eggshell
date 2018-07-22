@@ -27,13 +27,13 @@ A Clojure-driven spreadsheet
 - [ ] copy/paste cell value, copy/paste cell formula
 - [ ] "Import" or "layer" CSV files
 - [ ] export CSV
-- [ ] Keyboard shortcuts
+- [ ] Keyboard shortcuts (for windows too)
 - [x] Aliases for namespaces + GUI + saving as part of files - WIP
 - [x] Aliases: maybe require namespaces?
 - [ ] Aliases: user input validation with meaningful errors
 - [x] deps: all-lib for adding dependencies on the fly + GUI + saving as part of files
 - [ ] named cells?
-- [ ] fix glass pane clipping
+- [x] fix glass pane clipping
 - [ ] multiple selections rendered ok, but confusing behaviour when starting to edit
 
 ## TODO (polish)
