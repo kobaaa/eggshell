@@ -14,42 +14,31 @@ A Clojure-driven spreadsheet
 
 - [ ] Saving
 - [ ] Loading
-- [x] Cell slices in formulas
 - [ ] main function and package as a jar
-- [x] Code editor: multiline support
 - [ ] (WIP) Code editor: parinfer
-- [x] Cell editing: design interaction with code editor, F2
-- [ ] Cell editing: sync editor with cell display, maybe overwrite when in cell
-- [x] Grid: proper row header
-- [x] Errors: error handling in cells (and GUI to diplay stacktraces)
-- [x] Errors: handle compile errors in cells
+- [ ] UI for layers: disable/enable, re-order, change options
 - [ ] autofill: fill cells by increasing numbers in cell references in code
-- [ ] copy/paste cell value, copy/paste cell formula
 - [ ] "Import" or "layer" CSV files
+- [ ] Cell editing: sync editor with cell display, maybe overwrite when in cell
+- [ ] copy/paste cell value, copy/paste cell formula
 - [ ] export CSV
 - [ ] Insert row
 - [ ] Insert column
 - [ ] Keyboard shortcuts (for windows too)
-- [x] Aliases for namespaces + GUI + saving as part of files - WIP
-- [x] Aliases: maybe require namespaces?
 - [ ] Aliases: user input validation with meaningful errors
-- [x] deps: all-lib for adding dependencies on the fly + GUI + saving as part of files
 - [ ] named cells?
-- [x] fix glass pane clipping
 - [ ] multiple selections rendered ok, but confusing behaviour when starting to edit
+- [ ] multiple sheets
 
 ## TODO (polish)
 
 - [ ] user-visible logging
-- [x] deps: re-used editor for deps should be wired for newlines etc
+- [ ] freeze rows and show as header
+- [ ] select whole column/row
+- [ ] select multiple columns/rows by clicking and dragging in the headers
 - [ ] deps: disable all while working
-- [x] show pretty-printed value in error area when there is no error
-- [x] show cell id on the left of code editor
-- [x] Row header: resize row height individually
-- [x] Row header: resize row height uniformly
 - [ ] Row/col resize: double click to change size to content
 - [ ] provide a way to make a cell value `nil` and a way to make it `""`
-- [x] Aliases: prevent opening more than one frame
 - [ ] Aliases: autocomplete??
 - [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
 - [ ] save/load column widths
@@ -58,23 +47,45 @@ A Clojure-driven spreadsheet
 - [ ] inputs with data structure literals should maintain their formatting for better editing
 - [ ] highlight focused column (as with focused row)
 - [ ] a bit more work on row resize mouse behaviour
+- [ ] re-order columns
 
 ## TODO (advanced)
 
 - [ ] lazy graph
 - [ ] whole-column functions
+- [ ] relative references in formulas
+- [ ] show CSVs of any size based on random access
 - [ ] non-expanded range dependencies
 - [ ] export spreadsheet as some sort of Clojure code
 - [ ] some meta madness like spreadsheet-in-a-cell
 
 ## Bugs
 
-- [x] Having lots of rows make startup slow because row header doesn't seem to be lazy
 - [ ] Cells without deps (such as `(+ 1 2)`) don't get calculated
-- [x] Fix selection after cell value has been updated
 - [ ] Fix calculations happening on the swing thread
 - [ ] Fix save/load after state refactoring
-- [x] Once you've entered a function in a cell, you can't replace it with a scalar value
+
+## Done
+
+- [x] Cell slices in formulas
+- [x] Code editor: multiline support
+- [x] Cell editing: design interaction with code editor, F2
+- [x] Grid: proper row header
+- [x] Errors: error handling in cells (and GUI to diplay stacktraces)
+- [x] Errors: handle compile errors in cells
+- [x] Aliases for namespaces + GUI + saving as part of files - WIP
+- [x] Aliases: maybe require namespaces?
+- [x] deps: all-lib for adding dependencies on the fly + GUI + saving as part of files
+- [x] fix glass pane clipping
+- [x] Bug: Having lots of rows make startup slow because row header doesn't seem to be lazy
+- [x] Bug: Fix selection after cell value has been updated
+- [x] Bug: Once you've entered a function in a cell, you can't replace it with a scalar value
+- [x] deps: re-used editor for deps should be wired for newlines etc
+- [x] show pretty-printed value in error area when there is no error
+- [x] show cell id on the left of code editor
+- [x] Row header: resize row height individually
+- [x] Row header: resize row height uniformly
+- [x] Aliases: prevent opening more than one frame
 
 ## License
 
