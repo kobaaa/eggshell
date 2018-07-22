@@ -49,6 +49,7 @@ A Clojure-driven spreadsheet
 - [ ] highlight focused column (as with focused row)
 - [ ] a bit more work on row resize mouse behaviour
 - [ ] re-order columns
+- [ ] render vector and set values with monospaced font in grid
 
 ## TODO (advanced)
 
