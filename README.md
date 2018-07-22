@@ -33,6 +33,7 @@ A Clojure-driven spreadsheet
 ## TODO (polish)
 
 - [ ] user-visible logging
+- [ ] remember cursor position in code editor after hitting <enter>
 - [ ] freeze rows and show as header
 - [ ] select whole column/row
 - [ ] select multiple columns/rows by clicking and dragging in the headers

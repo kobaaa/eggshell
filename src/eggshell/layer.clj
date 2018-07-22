@@ -86,3 +86,31 @@
 ;;(require '[clojure.java.io :as io])
 ;;(javax.imageio.ImageIO/read (io/file "/Users/sideris/Downloads/toys-thumb.jpg"))
 ;;(let [x a0] (javax.imageio.ImageIO/read (io/file "/Users/sideris/Downloads/toys-thumb.jpg")))
+
+
+;;org.scilab.forge/jlatexmath {:mvn/version "1.0.7"}
+;;\cos (2\theta) = \cos^2 \theta - \sin^2 \theta
+;; (import '[org.scilab.forge.jlatexmath TeXFormula])
+;; (let [f    (TeXFormula. a0)
+;;       icon (.build (org.scilab.forge.jlatexmath.TeXFormula$TeXIconBuilder. f))]
+;;   icon)
+
+
+
+;; com.hypirion/clj-xchart {:mvn/version "0.2.0"}
+(comment
+ (let [_ a0
+       r (java.util.Random. 42)]
+   (c/as-buffered-image
+    (c/xy-chart
+     {"Maxime" {:x (range 10)
+                :y (mapv #(+ % (* 3 (.nextDouble r)))
+                         (range 10))}
+      "Tyrone" {:x (range 10)
+                :y (mapv #(+ 2 % (* 4 (.nextDouble r)))
+                         (range 0 5 0.5))}}
+     {:title "Longest running distance"
+      :x-axis {:title "Months (since start)"}
+      :y-axis {:title "Distance"
+               :decimal-pattern "##.## km"}
+      :theme :matlab}))))

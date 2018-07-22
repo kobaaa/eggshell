@@ -100,7 +100,7 @@
                          :editable? true)))))
 
 
-(defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader]}]
+(defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader grid-table grid-scroll-pane]}]
   (let [{:keys [load-button save-button deps-button aliases-button
                 cell-id-label code-editor grid
                 status-area status-line value-area cell-value-area]}
@@ -118,7 +118,9 @@
                (fn [_ _ _ _]
                  (table/save-selection
                   grid
-                  #(ss/invoke-now (.fireTableDataChanged table-model)))))
+                  #(ss/invoke-now (do
+                                    (.fireTableDataChanged table-model)
+                                    (grid/apply-row-heights grid-table grid-scroll-pane))))))
 
     ;;listen for cell selection changes to update code editor
     (table/listen-selection
@@ -232,12 +234,14 @@
     (-> frame .getRootPane (.setGlassPane (grid/glass-pane (.getRootPane frame) (:table grid))))
     (-> frame .getRootPane .getGlassPane (.setVisible true))
 
-    (wire! {:frame           frame
-            :state-atom      state-atom
-            :table-model     (.getModel (:table grid))
-            :cell-setter     cell-setter
-            :editable-getter editable-getter
-            :egg-loader      egg-loader})
+    (wire! {:frame            frame
+            :state-atom       state-atom
+            :table-model      (.getModel (:table grid))
+            :grid-table       (:table grid)
+            :grid-scroll-pane (:scroll-pane grid)
+            :cell-setter      cell-setter
+            :editable-getter  editable-getter
+            :egg-loader       egg-loader})
     (ss/invoke-later (doto frame
                        ss/pack!
                        ;;(.setLocationRelativeTo nil)
