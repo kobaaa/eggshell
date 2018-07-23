@@ -8,6 +8,7 @@
    \newline
    ["egg  eggshell.api"
     "math eggshell.api.math"
+    "img  eggshell.api.img"
     "str  clojure.string"
     "set  clojure.set"
     "io   clojure.java.io"]))
