@@ -140,7 +140,6 @@
 (defn apply-row-heights [table scroll-pane]
   (let [v (-> scroll-pane .getRowHeader .getView)]
     (doseq [r (apply range (table/visible-rows v))]
-      (prn r (.getRowHeight v r))
       (.setRowHeight table r (.getRowHeight v r)))))
 
 
