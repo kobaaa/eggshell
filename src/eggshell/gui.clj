@@ -145,10 +145,13 @@
     ;;listen to ENTER to update cell being edited
     (keymap/map-key code-editor "ENTER"
                     (fn [_]
-                      (let [row-col (table/selected-cell grid)]
+                      (let [row-col (table/selected-cell grid)
+                            pos     (ss/config code-editor :caret-position)]
                         (cfuture
                          (cell-setter row-col (ss/value code-editor))
-                         (ss/invoke-later (table/set-selection! grid row-col)))))
+                         (ss/invoke-now
+                          (table/set-selection! grid row-col)
+                          (ss/config! code-editor :caret-position pos)))))
                     :scope :self)
 
 
