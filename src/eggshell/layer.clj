@@ -141,3 +141,17 @@
     :legend {:visible? false}
     :axis {:ticks {:visible? false}}
     :theme :ggplot2})))
+
+
+;; {net.mikera/imagez {:mvn/version "0.12.0"}}
+;; i     mikera.image.core
+;; filt  mikera.image.filters
+;; (img/load "/Users/sideris/Downloads/toys.jpg")
+;; or
+;; (img/load "/Users/sideris/Downloads/santa.jpg")
+
+;;b0: (i/filter-image a0 (filt/invert))
+;;c0: (i/filter-image b0 (filt/blur))
+;;a1: (i/filter-image a0 (filt/grayscale))
+;;b1: (i/filter-image a1 (filt/emboss))
+;;a2: (i/filter-image a1 (filt/edge))
