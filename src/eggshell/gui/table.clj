@@ -27,6 +27,14 @@
     [min-row max-row]))
 
 
+(defn visible-columns [^javax.swing.JTable table]
+  (let [rect    (.getVisibleRect table)
+        min-col (.columnAtPoint table (.getLocation rect))
+        _       (.translate rect (.-width rect) 0)
+        max-col (.columnAtPoint table (.getLocation rect))]
+    [min-col max-col]))
+
+
 (defn cell-rect [^javax.swing.JTable table [row col]]
   (.getCellRect table row col false))
 
@@ -70,25 +78,29 @@
     (when selection (set-selection! table selection))))
 
 
+(defn header-label [header]
+  (doto (ss/text)
+    (ss/config! :halign :center
+                :background "#e9e9e9")
+    (.setOpaque true)
+    (.setBorder (border/line-border :color :lightgrey :bottom 1 :right 1))
+    (.setForeground (.getForeground header))
+    (.setFont (.getFont header))
+    (.setDoubleBuffered true)))
+
+
+;;;;;;;; Row header ;;;;;;;;
+
+
 (defn row-header-renderer [^javax.swing.JTable table]
-  (let [header (.getTableHeader table)
-        label  (doto (ss/text)
-                 (ss/config! :halign :center
-                             :background "#e9e9e9")
-                 (.setOpaque true)
-                 (.setBorder (border/line-border :color :lightgrey :bottom 1 :right 1))
-                 (.setForeground (.getForeground header))
-                 (.setFont (.getFont header))
-                 (.setDoubleBuffered true))]
+  (let [label (header-label (.getTableHeader table))]
     (proxy [javax.swing.table.DefaultTableCellRenderer] []
       (getTableCellRendererComponent [_ value is-selected has-focus row col]
         (ss/config! label
                     :text (str value)
-                    :background (if (= row (first (selected-cell table))) :lightgreen "#e9e9e9"))
-        ;; (.setPreferredSize nil)
-        ;; (.setPreferredSize
-        ;;  (java.awt.Dimension. (-> label .getPreferredSize .getWidth) (.getRowHeight table row)))
-        ))))
+                    :foreground "#6e5e5e"
+                    :background (if (= row (first (selected-cell table))) :lightgreen "#e9e9e9")))))) ;;TODO extract color
+
 
 (defn bottom-edge-rect [r]
   (java.awt.Rectangle. (.-x r) (+ (.-height r) (.-y r) -4)
@@ -135,7 +147,6 @@
         row-index     (atom nil)]
     (doto (ss/table
            :enabled? false
-           :cursor :move
            :model
            (proxy [javax.swing.table.DefaultTableModel] []
              (getColumnCount [] 1)
@@ -146,6 +157,9 @@
              (setValueAt [value row col])
              (getColumnClass [^Integer c] Object))
            :listen [:mouse-moved    (partial row-header-pointer-handler row-index)
+                    :mouse-exited (fn [_]
+                                    (let [root (javax.swing.SwingUtilities/getRoot table)]
+                                      (.setCursor root (cursor/cursor :default))))
                     :mouse-pressed  (fn [e]
                                       (if (and @row-index (= 2 (.getClickCount e)))
                                         (@#'fit-row-to-data table (.getSource e) @row-index)
@@ -162,3 +176,42 @@
       (.setDefaultRenderer Object (row-header-renderer table))
       ;;(.setPreferredSize (java.awt.Dimension. 50 450))
       )))
+
+
+;;;;;;;; Column header ;;;;;;;;
+
+
+(defn column-header-renderer [^javax.swing.JTable table]
+  (let [label (header-label (.getTableHeader table))]
+    (proxy [javax.swing.table.DefaultTableCellRenderer] []
+      (getTableCellRendererComponent [_ value is-selected has-focus row col]
+        (ss/config! label
+                    :text (str value)
+                    :foreground "#6e5e5e"
+                    :background (if (= col (second (selected-cell table))) :lightgreen "#e9e9e9"))))))
+
+
+(defn right-edge-rect [r]
+  (java.awt.Rectangle. (+ (.-x r) (.-width r) -4) (.-y r)
+                       7 (.-height r)))
+
+
+(defn- column-header-pointer-handler [table mouse-event]
+  (let [header        (.getSource mouse-event)
+        root          (javax.swing.SwingUtilities/getRoot table)
+        viz-cols      (apply range (visible-columns table))
+        rects         (map #(right-edge-rect (.getHeaderRect header %)) viz-cols)
+        point         (.getPoint mouse-event)]
+
+    ;;for some reason setting the cursor on table does not work
+    (if (some #(.contains % point) rects)
+      (.setCursor root (cursor/cursor :e-resize))
+      (.setCursor root (cursor/cursor :default)))))
+
+
+(defn config-column-resize-pointer! [table]
+  (ss/listen (.getTableHeader table)
+             :mouse-moved (partial column-header-pointer-handler table)
+             :mouse-exited (fn [_]
+                             (let [root (javax.swing.SwingUtilities/getRoot table)]
+                               (.setCursor root (cursor/cursor :default))))))

@@ -157,9 +157,13 @@
                      (.setDefaultEditor Object (cell-editor editable-getter))
                      (.setCellSelectionEnabled true)
                      (.setGridColor (color/color "#cecece"))
-                     (.setRowHeight 20))
+                     (.setRowHeight 20)
+                     table/config-column-resize-pointer!)
         scrollable (doto (ss/scrollable table :id :grid-scroll)
                      (.setRowHeaderView (table/row-header table)))]
+    (doto (.getTableHeader table)
+      (.setReorderingAllowed false)
+      (.setDefaultRenderer (table/column-header-renderer table)))
     (-> scrollable .getRowHeader (.setPreferredSize (java.awt.Dimension. 60 450)))
     {:scroll-pane scrollable
      :table       table}))
