@@ -38,7 +38,7 @@ A Clojure-driven spreadsheet
 - [ ] select whole column/row
 - [ ] select multiple columns/rows by clicking and dragging in the headers
 - [ ] deps: disable all while working
-- [ ] Row/col resize: double click to change size to content
+- [x] Row/col resize: double click to change size to content
 - [ ] provide a way to make a cell value `nil` and a way to make it `""`
 - [ ] Aliases: autocomplete??
 - [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
@@ -46,7 +46,7 @@ A Clojure-driven spreadsheet
 - [ ] trace errors with arrows
 - [ ] maybe merge interface for deps and aliases?
 - [ ] inputs with data structure literals should maintain their formatting for better editing
-- [ ] highlight focused column (as with focused row)
+- [x] highlight focused column (as with focused row)
 - [ ] a bit more work on row resize mouse behaviour
 - [ ] re-order columns
 - [ ] render vector and set values with monospaced font in grid

@@ -1,7 +1,8 @@
 (ns eggshell.gui.table
   (:require [seesaw.core :as ss]
             [seesaw.border :as border]
-            [seesaw.cursor :as cursor]))
+            [seesaw.cursor :as cursor]
+            [eggshell.util :as util]))
 
 
 (defn selected-cell [^javax.swing.JTable table]
@@ -133,7 +134,7 @@
 
 
 (defn- fit-row-to-data [table row-header row]
-  (let [heights        (for [col (range (.getColumnCount table))] ;;TODO limit this to max occupied column - don't scan the whole table
+  (let [heights        (for [col (range (min 1000 (.getColumnCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
                          (let [renderer  (.getCellRenderer table row col)
                                component (.prepareRenderer table renderer row col)]
                            (+ (-> component .getPreferredSize .height)
@@ -181,6 +182,17 @@
 ;;;;;;;; Column header ;;;;;;;;
 
 
+(defn- fit-column-to-data [table col]
+  (util/cfuture
+   (let [widths        (for [row (range (min 1000 (.getRowCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
+                         (let [renderer  (.getCellRenderer table row col)
+                               component (.prepareRenderer table renderer row col)]
+                           (+ (-> component .getPreferredSize .width)
+                              (-> table .getIntercellSpacing .width))))
+         optimal-width (apply max (cons 60 widths))] ;;TODO extract min column width
+     (ss/invoke-later (-> table .getColumnModel (.getColumn col) (.setPreferredWidth optimal-width))))))
+
+
 (defn column-header-renderer [^javax.swing.JTable table]
   (let [label (header-label (.getTableHeader table))]
     (proxy [javax.swing.table.DefaultTableCellRenderer] []
@@ -196,22 +208,33 @@
                        7 (.-height r)))
 
 
-(defn- column-header-pointer-handler [table mouse-event]
+(defn- column-header-pointer-handler [table col-index mouse-event]
   (let [header        (.getSource mouse-event)
         root          (javax.swing.SwingUtilities/getRoot table)
         viz-cols      (apply range (visible-columns table))
-        rects         (map #(right-edge-rect (.getHeaderRect header %)) viz-cols)
-        point         (.getPoint mouse-event)]
+        rects         (zipmap (map #(right-edge-rect (.getHeaderRect header %)) viz-cols)
+                              viz-cols)
+        point         (.getPoint mouse-event)
+        matching-rect (first (filter #(.contains % point) (keys rects)))
+        matching-col  (get rects matching-rect)]
 
     ;;for some reason setting the cursor on table does not work
-    (if (some #(.contains % point) rects)
-      (.setCursor root (cursor/cursor :e-resize))
-      (.setCursor root (cursor/cursor :default)))))
+    (if matching-rect
+      (do
+        (reset! col-index matching-col)
+        (.setCursor root (cursor/cursor :e-resize)))
+      (do
+        (reset! col-index nil)
+        (.setCursor root (cursor/cursor :default))))))
 
 
-(defn config-column-resize-pointer! [table]
-  (ss/listen (.getTableHeader table)
-             :mouse-moved (partial column-header-pointer-handler table)
-             :mouse-exited (fn [_]
-                             (let [root (javax.swing.SwingUtilities/getRoot table)]
-                               (.setCursor root (cursor/cursor :default))))))
+(defn config-column-resize! [table]
+  (let [col-index (atom nil)]
+    (ss/listen (.getTableHeader table)
+               :mouse-moved (partial column-header-pointer-handler table col-index)
+               :mouse-exited (fn [_]
+                               (let [root (javax.swing.SwingUtilities/getRoot table)]
+                                 (.setCursor root (cursor/cursor :default))))
+               :mouse-pressed (fn [e]
+                                (when (and @col-index (= 2 (.getClickCount e)))
+                                  (@#'fit-column-to-data table @col-index))))))

@@ -158,7 +158,7 @@
                      (.setCellSelectionEnabled true)
                      (.setGridColor (color/color "#cecece"))
                      (.setRowHeight 20)
-                     table/config-column-resize-pointer!)
+                     table/config-column-resize!)
         scrollable (doto (ss/scrollable table :id :grid-scroll)
                      (.setRowHeaderView (table/row-header table)))]
     (doto (.getTableHeader table)
