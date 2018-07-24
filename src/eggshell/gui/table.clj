@@ -115,6 +115,21 @@
         (.setCursor root (cursor/cursor :default))))))
 
 
+(defn- set-row-height [table row-header row height]
+  (.setRowHeight table row height)
+  (.setRowHeight row-header row height))
+
+
+(defn- fit-row-to-data [table row-header row]
+  (let [heights        (for [col (range (.getColumnCount table))] ;;TODO limit this to max occupied column - don't scan the whole table
+                         (let [renderer  (.getCellRenderer table row col)
+                               component (.prepareRenderer table renderer row col)]
+                           (+ (-> component .getPreferredSize .height)
+                              (-> table .getIntercellSpacing .height))))
+        optimal-height (apply max (cons 20 heights))] ;;TODO extract min row height
+    (set-row-height table row-header row optimal-height)))
+
+
 (defn row-header [^javax.swing.JTable table]
   (let [dragged-start (atom nil)
         row-index     (atom nil)]
@@ -131,16 +146,17 @@
              (setValueAt [value row col])
              (getColumnClass [^Integer c] Object))
            :listen [:mouse-moved    (partial row-header-pointer-handler row-index)
-                    :mouse-pressed  (fn [e] (reset! dragged-start (.getY e)))
-                    :mouse-released (fn [e]
-                                      (reset! dragged-start nil)
-                                      (reset! row-index nil))
+                    :mouse-pressed  (fn [e]
+                                      (if (and @row-index (= 2 (.getClickCount e)))
+                                        (@#'fit-row-to-data table (.getSource e) @row-index)
+                                        (reset! dragged-start (.getY e))))
+                    :mouse-released (fn [e] (reset! dragged-start nil))
                     :mouse-dragged  (fn [e]
-                                      (when-let [row @row-index]
-                                        (let [d          (- (.getY e) @dragged-start)
+                                      (when-let [ds @dragged-start]
+                                        (let [row        @row-index
+                                              d          (- (.getY e) ds)
                                               new-height (max 20 (+ (.getRowHeight table row) d))]
-                                          (.setRowHeight table row new-height)
-                                          (.setRowHeight (.getSource e) row new-height)
+                                          (set-row-height table (.getSource e) row new-height)
                                           (reset! dragged-start (.getY e)))))])
       (.setRowHeight (.getRowHeight table))
       (.setDefaultRenderer Object (row-header-renderer table))

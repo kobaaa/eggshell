@@ -60,6 +60,7 @@
                                    ::selected? ::has-focus?] :as v}]
                         (if (instance? java.awt.Image original-value)
                           (do (reset! image original-value)
+                              (.setPreferredSize panel (java.awt.Dimension. (.getWidth original-value) (.getHeight original-value)))
                               panel)
                           (renderer row-col v)))})))
 
