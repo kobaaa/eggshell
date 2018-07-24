@@ -50,6 +50,9 @@ A Clojure-driven spreadsheet
 - [ ] a bit more work on row resize mouse behaviour
 - [ ] re-order columns
 - [ ] render vector and set values with monospaced font in grid
+- [ ] split result (down/right)
+- [ ] split arrow (down/right)
+- [ ] split let?
 
 ## TODO (advanced)
 
@@ -63,7 +66,7 @@ A Clojure-driven spreadsheet
 
 ## Bugs
 
-- [ ] Bug: Cells without deps (such as `(+ 1 2)`) don't get calculated
+- [x] Bug: Cells without deps (such as `(+ 1 2)`) don't get calculated
 - [ ] Bug: Fix calculations happening on the swing thread
 - [ ] Bug: Fix save/load after state refactoring
 - [ ] Bug: Try editing some multi-line code and hitting <enter>. The whole

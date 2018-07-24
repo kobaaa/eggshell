@@ -60,6 +60,11 @@
       (apply loom/add-edges g (for [input inputs] [input cell])))))
 
 
+(defn- inputs [function]
+  (or (not-empty (:inputs function))
+      [(:cell function)])) ;;no-input functions are an extra start themselves
+
+
 (defn advance
   ([g new-inputs]
    (advance g new-inputs []))
@@ -67,7 +72,7 @@
    (let [g (reduce (fn [g function]
                      (set-function-and-connect g function))
                    g new-functions)]
-     (rakk/advance g new-inputs (set (mapcat :inputs new-functions))))))
+     (rakk/advance g new-inputs (set (mapcat inputs new-functions))))))
 
 
 (defn idx->column* [x] ;;TODO this is wrong beyond 702, fix
