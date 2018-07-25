@@ -132,15 +132,19 @@
   (.setRowHeight table row height)
   (.setRowHeight row-header row height))
 
+(def fit-row-to-data-monitor (atom nil))
 
 (defn- fit-row-to-data [table row-header row]
-  (let [heights        (for [col (range (min 1000 (.getColumnCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
-                         (let [renderer  (.getCellRenderer table row col)
-                               component (.prepareRenderer table renderer row col)]
-                           (+ (-> component .getPreferredSize .height)
-                              (-> table .getIntercellSpacing .height))))
-        optimal-height (apply max (cons 20 heights))] ;;TODO extract min row height
-    (set-row-height table row-header row optimal-height)))
+  (util/cfuture
+   (util/unspam
+    fit-row-to-data-monitor
+    (let [heights        (for [col (range (min 1000 (.getColumnCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
+                           (let [renderer  (.getCellRenderer table row col)
+                                 component (.prepareRenderer table renderer row col)]
+                             (+ (-> component .getPreferredSize .height)
+                                (-> table .getIntercellSpacing .height))))
+          optimal-height (apply max (cons 20 heights))] ;;TODO extract min row height
+      (ss/invoke-later (set-row-height table row-header row optimal-height))))))
 
 
 (defn row-header [^javax.swing.JTable table]
@@ -182,15 +186,19 @@
 ;;;;;;;; Column header ;;;;;;;;
 
 
+(def fit-column-to-data-monitor (atom nil))
+
 (defn- fit-column-to-data [table col]
   (util/cfuture
-   (let [widths        (for [row (range (min 1000 (.getRowCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
-                         (let [renderer  (.getCellRenderer table row col)
-                               component (.prepareRenderer table renderer row col)]
-                           (+ (-> component .getPreferredSize .width)
-                              (-> table .getIntercellSpacing .width))))
-         optimal-width (apply max (cons 60 widths))] ;;TODO extract min column width
-     (ss/invoke-later (-> table .getColumnModel (.getColumn col) (.setPreferredWidth optimal-width))))))
+   (util/unspam
+    fit-column-to-data-monitor
+    (let [widths        (for [row (range (min 1000 (.getRowCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
+                          (let [renderer  (.getCellRenderer table row col)
+                                component (.prepareRenderer table renderer row col)]
+                            (+ (-> component .getPreferredSize .width)
+                               (-> table .getIntercellSpacing .width))))
+          optimal-width (apply max (cons 60 widths))] ;;TODO extract min column width
+      (ss/invoke-later (-> table .getColumnModel (.getColumn col) (.setPreferredWidth optimal-width)))))))
 
 
 (defn column-header-renderer [^javax.swing.JTable table]

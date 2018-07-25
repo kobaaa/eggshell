@@ -20,3 +20,12 @@
        (catch Exception e#
          (.printStackTrace e#)
          (throw e#)))))
+
+
+(defmacro unspam [monitor & body]
+  `(when-not (= ::already-running (deref ~monitor))
+     (try
+       (reset! ~monitor ::already-running)
+       (do ~@body)
+       (finally
+         (reset! ~monitor nil)))))

@@ -164,11 +164,13 @@
     (ss/listen load-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file)]
+                   ;;TODO move to future?
                    (egg-loader file grid))))
 
     (ss/listen save-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file :type :save)]
+                   ;;TODO move to future?
                    (controller/save-egg file {::e/graph         graph
                                               ::e/column-widths (table/column-widths grid)}))))
 
