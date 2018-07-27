@@ -196,8 +196,13 @@
                                                :preferred-size [(.getWidth value-area) :by 200]))]
 
       (ss/listen status-line :mouse-clicked toggle-value-area)
-      (keymap/map-key frame "meta E" toggle-value-area)
-      (keymap/map-key grid "meta E" toggle-value-area))))
+      (if (util/mac?)
+        (do
+          (keymap/map-key frame "meta E" toggle-value-area)
+          (keymap/map-key grid "meta E" toggle-value-area))
+        (do
+          (keymap/map-key frame "ctrl E" toggle-value-area)
+          (keymap/map-key grid "ctrl E" toggle-value-area))))))
 
 
 (defn- toolbar []

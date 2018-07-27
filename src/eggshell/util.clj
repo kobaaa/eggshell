@@ -1,4 +1,5 @@
-(ns eggshell.util)
+(ns eggshell.util
+  (:require [clojure.string :as str]))
 
 (defmacro with-err-str
   "Evaluates exprs in a context in which *err* is bound to a fresh
@@ -29,3 +30,10 @@
        (do ~@body)
        (finally
          (reset! ~monitor nil)))))
+
+
+(defn mac? []
+  (-> "os.name"
+      (System/getProperty)
+      str/lower-case
+      (str/includes? "mac")))
