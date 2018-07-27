@@ -8,7 +8,8 @@ A Clojure-driven spreadsheet
 * `Esc` while in cell editor to go back to grid
 * `Enter` while in cell editor to apply your change
 * `Ctrl+Enter` while in cell editor to enter a newline
-* `Cmd+E` to show cell value/cell error area (at the bottom of the frame)
+* `Ctrl+E` (Windows/Linux) or `Cmd+E` (Mac) to show cell value/cell
+  error area (at the bottom of the frame)
 
 ## TODO (essential)
 
@@ -24,7 +25,7 @@ A Clojure-driven spreadsheet
 - [ ] export CSV
 - [ ] Insert row
 - [ ] Insert column
-- [ ] Keyboard shortcuts (for windows too)
+- [x] Keyboard shortcuts (for windows too)
 - [ ] Aliases: user input validation with meaningful errors
 - [ ] named cells?
 - [ ] multiple selections rendered ok, but confusing behaviour when starting to edit
