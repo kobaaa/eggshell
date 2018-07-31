@@ -2,8 +2,7 @@
   (:require [eggshell.gui]
             [eggshell.state]
             [eggshell.api.img]
-            [eggshell.api.math])
-  (:gen-class))
+            [eggshell.api.math]))
 
 (defn -main
   []
