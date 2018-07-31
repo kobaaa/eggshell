@@ -132,19 +132,65 @@
   (.setRowHeight table row height)
   (.setRowHeight row-header row height))
 
-(def fit-row-to-data-monitor (atom nil))
 
+(defn- optimal-row-height [table row]
+  (let [heights (for [col (range (min 1000 (.getColumnCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
+                  (let [renderer  (.getCellRenderer table row col)
+                        component (.prepareRenderer table renderer row col)]
+                    (+ (-> component .getPreferredSize .height)
+                       (-> table .getIntercellSpacing .height))))]
+    (apply max (cons 20 heights)))) ;;TODO extract min row height
+
+
+(def fit-row-to-data-monitor (atom nil))
 (defn- fit-row-to-data [table row-header row]
+  ;;TODO warn user that this may be late
   (util/cfuture
    (util/unspam
     fit-row-to-data-monitor
-    (let [heights        (for [col (range (min 1000 (.getColumnCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
-                           (let [renderer  (.getCellRenderer table row col)
-                                 component (.prepareRenderer table renderer row col)]
-                             (+ (-> component .getPreferredSize .height)
-                                (-> table .getIntercellSpacing .height))))
-          optimal-height (apply max (cons 20 heights))] ;;TODO extract min row height
+    (let [optimal-height (optimal-row-height table row)]
       (ss/invoke-later (set-row-height table row-header row optimal-height))))))
+
+
+(defn- fit-all-rows-to-data [table row-header]
+  (util/cfuture
+   (util/unspam
+    fit-row-to-data-monitor
+    (let [optimal-heights (doall
+                           (map (partial optimal-row-height table)
+                                (range (min 100 (.getRowCount table)))))]
+      (ss/invoke-later (doseq [[row h] (map vector (range) optimal-heights)]
+                         (set-row-height table row-header row h)))))))
+
+
+(def fit-column-to-data-monitor (atom nil))
+
+(defn- optimal-column-width [table col]
+  (let [widths (for [row (range (min 1000 (.getRowCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
+                 (let [renderer  (.getCellRenderer table row col)
+                       component (.prepareRenderer table renderer row col)]
+                   (+ (-> component .getPreferredSize .width)
+                      (-> table .getIntercellSpacing .width))))]
+    (apply max (cons 60 widths)))) ;;TODO extract min column width
+
+
+(defn- fit-column-to-data [table col]
+  (util/cfuture
+   (util/unspam
+    fit-column-to-data-monitor
+    (let [optimal-width (optimal-column-width table col)]
+      (ss/invoke-later (-> table .getColumnModel (.getColumn col) (.setPreferredWidth optimal-width)))))))
+
+
+(defn- fit-all-columns-to-data [table]
+  (util/cfuture
+   (util/unspam
+    fit-column-to-data-monitor
+    (let [optimal-widths (doall
+                          (map (partial optimal-column-width table)
+                               (range (min 100 (.getColumnCount table)))))]
+      (ss/invoke-later (doseq [[col w] (map vector (range) optimal-widths)]
+                         (-> table .getColumnModel (.getColumn col) (.setPreferredWidth w))))))))
 
 
 (defn row-header [^javax.swing.JTable table]
@@ -167,7 +213,9 @@
                                       (.setCursor root (cursor/cursor :default))))
                     :mouse-pressed  (fn [e]
                                       (if (and @row-index (= 2 (.getClickCount e)))
-                                        (@#'fit-row-to-data table (.getSource e) @row-index)
+                                        (if (.isShiftDown e)
+                                          (fit-all-rows-to-data table (.getSource e))
+                                          (fit-row-to-data table (.getSource e) @row-index))
                                         (reset! dragged-start (.getY e))))
                     :mouse-released (fn [e] (reset! dragged-start nil))
                     :mouse-dragged  (fn [e]
@@ -184,21 +232,6 @@
 
 
 ;;;;;;;; Column header ;;;;;;;;
-
-
-(def fit-column-to-data-monitor (atom nil))
-
-(defn- fit-column-to-data [table col]
-  (util/cfuture
-   (util/unspam
-    fit-column-to-data-monitor
-    (let [widths        (for [row (range (min 1000 (.getRowCount table)))] ;;TODO limit this to max occupied column - don't scan the whole table
-                          (let [renderer  (.getCellRenderer table row col)
-                                component (.prepareRenderer table renderer row col)]
-                            (+ (-> component .getPreferredSize .width)
-                               (-> table .getIntercellSpacing .width))))
-          optimal-width (apply max (cons 60 widths))] ;;TODO extract min column width
-      (ss/invoke-later (-> table .getColumnModel (.getColumn col) (.setPreferredWidth optimal-width)))))))
 
 
 (defn column-header-renderer [^javax.swing.JTable table]
@@ -245,4 +278,6 @@
                                  (.setCursor root (cursor/cursor :default))))
                :mouse-pressed (fn [e]
                                 (when (and @col-index (= 2 (.getClickCount e)))
-                                  (@#'fit-column-to-data table @col-index))))))
+                                  (if (.isShiftDown e)
+                                    (fit-all-columns-to-data table)
+                                    (fit-column-to-data table @col-index)))))))

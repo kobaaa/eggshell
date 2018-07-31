@@ -19,7 +19,7 @@ A Clojure-driven spreadsheet
 - [ ] (WIP) Code editor: parinfer
 - [ ] UI for layers: disable/enable, re-order, change options
 - [ ] autofill: fill cells by increasing numbers in cell references in code
-- [ ] "Import" or "layer" CSV files
+- [ ] "Import" or "layer" CSV files, pandas dataframe
 - [ ] Cell editing: sync editor with cell display, maybe overwrite when in cell
 - [ ] copy/paste cell value, copy/paste cell formula
 - [ ] export CSV
@@ -30,6 +30,8 @@ A Clojure-driven spreadsheet
 - [ ] named cells?
 - [ ] multiple selections rendered ok, but confusing behaviour when starting to edit
 - [ ] multiple sheets
+- [ ] return formatted cell
+- [ ] return clickable cell
 
 ## TODO (polish)
 
@@ -52,7 +54,7 @@ A Clojure-driven spreadsheet
 - [ ] re-order columns
 - [ ] render vector and set values with monospaced font in grid
 - [ ] split result (down/right)
-- [ ] split arrow (down/right)
+- [ ] split arrows (down/right)
 - [ ] split let?
 
 ## TODO (advanced)
@@ -64,6 +66,8 @@ A Clojure-driven spreadsheet
 - [ ] non-expanded range dependencies
 - [ ] export spreadsheet as some sort of Clojure code
 - [ ] some meta madness like spreadsheet-in-a-cell
+- [ ] defer: run when I click
+- [ ] defer: run every x seconds
 
 ## Bugs
 

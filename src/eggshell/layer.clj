@@ -19,8 +19,8 @@
 (defn grid [cell-getter cell-setter]
   (let [label (ss/label)]
     {:type         "grid"
-     :column-count (constantly 50)
-     :row-count    (constantly 1048576)
+     :column-count (constantly 100)
+     :row-count    (constantly 1000)
      :column-name  (partial graph/idx->column)
      :value        cell-getter
      :set-value!   cell-setter
