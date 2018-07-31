@@ -13,9 +13,9 @@ A Clojure-driven spreadsheet
 
 ## TODO (essential)
 
-- [ ] Saving
-- [ ] Loading
-- [ ] main function and package as a jar
+- [x] Saving
+- [x] Loading
+- [x] main function and package as a jar
 - [ ] (WIP) Code editor: parinfer
 - [ ] UI for layers: disable/enable, re-order, change options
 - [ ] autofill: fill cells by increasing numbers in cell references in code
@@ -45,7 +45,7 @@ A Clojure-driven spreadsheet
 - [ ] provide a way to make a cell value `nil` and a way to make it `""`
 - [ ] Aliases: autocomplete??
 - [ ] Aliases/text editors: Ctrl+A, Ctrl+E, Ctrl+Z
-- [ ] save/load column widths
+- [ ] save/load column/row widths
 - [ ] trace errors with arrows
 - [ ] maybe merge interface for deps and aliases?
 - [ ] inputs with data structure literals should maintain their formatting for better editing

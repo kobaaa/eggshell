@@ -22,7 +22,7 @@
 
 (defn function? [g cell]
   (try
-    (some? (attr/attr g cell :function))
+    (some? (attr/attr g cell ::e/raw-code))
     (catch Exception _ false)))
 
 

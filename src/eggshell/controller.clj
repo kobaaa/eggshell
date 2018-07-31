@@ -12,16 +12,7 @@
   (:refer-clojure :exclude [compile]))
 
 
-(defn load-egg [filename {:keys [state-atom]}]
-  (let [{:eggshell/keys [graph aliases]} (io/load-egg filename)]
-    ;; (reset! state-atom
-    ;;         {::e/graph   (compile-functions graph aliases)
-    ;;          ::e/aliases aliases})
-    )
-  nil)
-
-
-(defn save-egg [filename {:keys [state]}]
+(defn save-egg [filename {::e/keys [state]}]
   (io/save-egg state filename))
 
 
@@ -68,12 +59,15 @@
     (update state ::e/graph graph/advance {} compiled)))
 
 
-(defn set-aliases! [state-atom aliases]
-  (prn 'add-aliases! (.getName (Thread/currentThread)))
-  (doseq [ns (map second (parse-aliases aliases))]
+(defn require-aliases! [aliases-text]
+  (doseq [ns (map second (parse-aliases aliases-text))]
     (println "Requiring" ns)
     (try (require (symbol ns))
-         (catch Exception _)))
+         (catch Exception _))))
+
+
+(defn set-aliases! [state-atom aliases]
+  (require-aliases! aliases)
   (swap! state-atom
          #(-> %
               (assoc ::e/aliases aliases)
@@ -102,6 +96,19 @@
          #(-> %
               (assoc ::e/deps deps)
               recompile-all)))
+
+
+(defn load-egg [filename {:keys [state-atom]}]
+  (let [{:eggshell/keys [graph aliases deps]} (io/load-egg filename)]
+    (add-libs! (edn/read-string deps))
+    (require-aliases! aliases)
+    (reset! state-atom
+            (-> {::e/graph   graph
+                 ::e/deps    deps
+                 ::e/aliases aliases}
+                recompile-all
+                (update ::e/graph rakk/recalc))))
+  nil)
 
 
 (defn- set-function-at! [state-atom cell-id [row col] value]

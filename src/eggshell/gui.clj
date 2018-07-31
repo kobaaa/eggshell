@@ -165,13 +165,13 @@
                (fn [_]
                  (when-let [file (chooser/choose-file)]
                    ;;TODO move to future?
-                   (egg-loader file grid))))
+                   (util/cfuture (egg-loader file grid)))))
 
     (ss/listen save-button :action
                (fn [_]
                  (when-let [file (chooser/choose-file :type :save)]
                    ;;TODO move to future?
-                   (controller/save-egg file {::e/graph         graph
+                   (controller/save-egg file {::e/state         @state-atom
                                               ::e/column-widths (table/column-widths grid)}))))
 
     (ss/listen deps-button :action
@@ -220,7 +220,7 @@
         cell-getter     (partial controller/get-value-at state-atom)
         editable-getter (partial controller/get-editable-value-at state-atom)
         egg-loader      (fn [file grid]
-                          (controller/load-egg file {:graph-atom (::e/graph @state-atom)
+                          (controller/load-egg file {:state-atom state-atom
                                                      :grid       grid}))
         layer           (-> (layer/grid cell-getter cell-setter)
                             (layer/image-render)
