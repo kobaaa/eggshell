@@ -6,6 +6,7 @@
             [seesaw.border :as border]
             [seesaw.color :as color]
             [seesaw.border :as border]
+            [seesaw.meta :as meta]
             [seesaw.dev :as dev]
             [rakk.core :as rakk]
             [eggshell :as e]
@@ -18,6 +19,7 @@
             [eggshell.gui.aliases :as aliases]
             [eggshell.gui.deps :as deps]
             [eggshell.gui.grid :as grid]
+            [eggshell.gui.menu :as menu]
             [eggshell.state :as state]
             [eggshell.layer :as layer]
             [eggshell.util :as util :refer [cfuture]]
@@ -86,18 +88,18 @@
 
 (defn- update-code-editor! [code-editor cell-id-label grid editable-getter]
   (let [selected (table/selected-cell grid)]
-         (if-not selected
-           (do
-             (ss/value! cell-id-label "N/A")
-             (ss/config! code-editor
-                         :text      ""
-                         :editable? false))
-           (do
-             (ss/value! cell-id-label (str (name (graph/coords->id (first selected) (second selected)))
-                                           " ="))
-             (ss/config! code-editor
-                         :text      (editable-getter selected)
-                         :editable? true)))))
+    (if-not selected
+      (do
+        (ss/value! cell-id-label "N/A")
+        (ss/config! code-editor
+                    :text      ""
+                    :editable? false))
+      (do
+        (ss/value! cell-id-label (str (name (graph/coords->id (first selected) (second selected)))
+                                      " ="))
+        (ss/config! code-editor
+                    :text      (editable-getter selected)
+                    :editable? true)))))
 
 
 (defn wire! [{:keys [frame state-atom table-model cell-setter editable-getter egg-loader grid-table grid-scroll-pane]}]
@@ -175,8 +177,9 @@
                (fn [_]
                  (when-let [file (chooser/choose-file :type :save)]
                    ;;TODO move to future?
-                   (controller/save-egg file {::e/state         @state-atom
-                                              ::e/column-widths (table/column-widths grid)}))))
+                   (controller/save-egg file {::e/state       @state-atom
+                                              ::e/col-widths  (meta/get-meta grid ::e/col-widths)
+                                              ::e/row-heights (meta/get-meta grid ::e/row-heights)}))))
 
     (ss/listen deps-button :action
                (fn [_]
@@ -220,34 +223,43 @@
 
 
 (defn grid-frame [state-atom]
-  (let [cell-setter     (partial controller/set-cell-at! state-atom)
-        cell-getter     (partial controller/get-value-at state-atom)
-        dimensions-fn   (partial controller/get-dimensions state-atom)
-        editable-getter (partial controller/get-editable-value-at state-atom)
-        egg-loader      (fn [file grid]
-                          (controller/load-egg file {:state-atom state-atom
-                                                     :grid       grid}))
-        layer           (-> (layer/grid cell-getter cell-setter dimensions-fn)
-                            (layer/image-render)
-                            (layer/errors))
-        grid            (grid/make-grid layer editable-getter)
-        frame           (ss/frame :title "eggshell"
-                                  :content (ss/border-panel
-                                            :north (toolbar)
-                                            :center
-                                            (ss/border-panel
-                                             :north  (ss/border-panel
-                                                      :west   (ss/label :id :cell-id-label
-                                                                        :font defaults/mono-font
-                                                                        :text "N/A ="
-                                                                        :border (border/empty-border :left 14))
-                                                      :center (code-editor/code-editor))
-                                             :center (:scroll-pane grid))
-                                            :south (status-area))
-                                  :on-close :dispose)]
+  (let [{::e/keys [col-widths row-heights]} @state-atom
+        cell-setter                         (partial controller/set-cell-at! state-atom)
+        cell-getter                         (partial controller/get-value-at state-atom)
+        dimensions-fn                       (partial controller/get-dimensions state-atom)
+        editable-getter                     (partial controller/get-editable-value-at state-atom)
+        egg-loader                          (fn [file grid]
+                                              (controller/load-egg file {:state-atom state-atom
+                                                                         :grid       grid}))
+        layer                               (-> (layer/grid cell-getter cell-setter dimensions-fn)
+                                                (layer/image-render)
+                                                (layer/errors))
+        grid                                (grid/make-grid layer editable-getter)
+        frame                               (ss/frame :title "eggshell"
+                                                      :content (ss/border-panel
+                                                                :north (toolbar)
+                                                                :center
+                                                                (ss/border-panel
+                                                                 :north  (ss/border-panel
+                                                                          :west   (ss/label :id :cell-id-label
+                                                                                            :font defaults/mono-font
+                                                                                            :text "N/A ="
+                                                                                            :border (border/empty-border :left 14))
+                                                                          :center (code-editor/code-editor))
+                                                                 :center (:scroll-pane grid))
+                                                                :south (status-area))
+                                                      :on-close :dispose)]
 
     (-> frame .getRootPane (.setGlassPane (grid/glass-pane (.getRootPane frame) (:table grid))))
     (-> frame .getRootPane .getGlassPane (.setVisible true))
+
+    (ss/config!
+     (:table grid)
+     :popup
+     (fn [e]
+       (menu/grid-menu
+        {:value           (some->> e .getPoint (table/cell-at-point (:table grid)) cell-getter)
+         :split-result-fn (partial controller/split-result state-atom)})))
 
     (wire! {:frame            frame
             :state-atom       state-atom
@@ -257,10 +269,13 @@
             :cell-setter      cell-setter
             :editable-getter  editable-getter
             :egg-loader       egg-loader})
-    (ss/invoke-later (doto frame
-                       ss/pack!
-                       ;;(.setLocationRelativeTo nil)
-                       ss/show!))))
+    (ss/invoke-later (do
+                       (doto frame
+                        ss/pack!
+                        ;;(.setLocationRelativeTo nil)
+                        ss/show!)
+                       (table/set-column-widths (:table grid) col-widths)
+                       (table/set-row-heights (:table grid) row-heights)))))
 
 
 (defn frames []

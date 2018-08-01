@@ -8,6 +8,7 @@
   cross-parinfer                 {:mvn/version "1.4.5"}
   org.clojure/tools.deps.alpha   {:git/url "https://github.com/clojure/tools.deps.alpha.git"
                                   :sha     "d492e97259c013ba401c5238842cd3445839d020"}
+  me.raynes/fs                   {:mvn/version "1.4.6"}
   org.scilab.forge/jlatexmath    {:mvn/version "1.0.7"}}
  :mvn/repos
  {"central" {:url "https://repo1.maven.org/maven2/"}

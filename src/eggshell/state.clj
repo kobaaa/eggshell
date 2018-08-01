@@ -11,7 +11,8 @@
     "img  eggshell.api.img"
     "str  clojure.string"
     "set  clojure.set"
-    "io   clojure.java.io"]))
+    "io   clojure.java.io"
+    "fs   me.raynes.fs"]))
 
 
 (def egg-atom (atom {::e/graph   (graph/make)

@@ -8,12 +8,18 @@
             [rakk.core :as rakk]
             [clojure.string :as str]
             [clojure.edn :as edn]
-            [clojure.tools.deps.alpha.repl :as deps])
+            [clojure.tools.deps.alpha.repl :as deps]
+
+            [seesaw.core :as ss]
+            [eggshell.gui.table :as table])
   (:refer-clojure :exclude [compile]))
 
 
-(defn save-egg [filename {::e/keys [state]}]
-  (io/save-egg state filename))
+(defn save-egg [filename {::e/keys [state col-widths row-heights]}]
+  (let [data (-> state
+                 (update ::e/col-widths merge col-widths)
+                 (update ::e/row-heights merge row-heights))]
+   (io/save-egg data filename)))
 
 
 ;;TODO error handling
@@ -98,14 +104,17 @@
               recompile-all)))
 
 
-(defn load-egg [filename {:keys [state-atom]}]
-  (let [{:eggshell/keys [aliases deps] :as egg} (io/load-egg filename)]
+(defn load-egg [filename {:keys [state-atom grid]}]
+  (let [{::e/keys [aliases deps col-widths row-heights] :as egg} (io/load-egg filename)]
     (add-libs! (edn/read-string deps))
     (require-aliases! aliases)
     (reset! state-atom
             (-> egg
                 recompile-all
-                (update ::e/graph rakk/recalc))))
+                (update ::e/graph rakk/recalc)))
+    (ss/invoke-later
+     (table/set-column-widths grid col-widths)
+     (table/set-row-heights grid row-heights)))
   nil)
 
 
@@ -175,3 +184,15 @@
               :else
               (pr-str v))
         nil))))
+
+
+(defn split-result [state-atom {:keys [value dynamic] :as opts}]
+  (let [{:keys [original-value cell-id]} value
+        cell-ids                         (take (count original-value)
+                                               (iterate graph/cell-below (graph/cell-below cell-id)))
+        max-cell                         (graph/id->coords (last cell-ids))]
+    (if-not dynamic
+      (swap! state-atom
+             #(-> %
+                  (update-max-row-col max-cell)
+                  (update ::e/graph graph/advance (zipmap cell-ids original-value) []))))))

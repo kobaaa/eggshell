@@ -1,0 +1,1 @@
+{:eggshell/file-type "eggshell spreadsheet", :eggshell/version "v1", :eggshell/graph {:nodeset #{}, :adj {}, :in {}}, :eggshell/deps "{}", :eggshell/aliases "egg  eggshell.api\nmath eggshell.api.math\nimg  eggshell.api.img\nstr  clojure.string\nset  clojure.set\nio   clojure.java.io", :eggshell/col-widths {0 36, 1 18, 2 111}, :eggshell/row-heights {0 41, 1 42, 32 137}}

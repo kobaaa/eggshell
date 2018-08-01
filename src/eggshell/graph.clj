@@ -110,9 +110,14 @@
     [(Integer/parseInt row) (col->idx col)]))
 
 
-(defn in-line? [[row1 col1] [row2 col2]]
-  (or (= row1 row2)
-      (= col1 col2)))
+(defn cell-below [id]
+  (let [[row col] (id->coords id)]
+    (apply coords->id [(inc row) col])))
+
+
+(defn cell-right [id]
+  (let [[row col] (id->coords id)]
+    (apply coords->id [row (inc col)])))
 
 
 (defn slice [g id1 id2]

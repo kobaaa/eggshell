@@ -2,6 +2,8 @@
   (:require [seesaw.core :as ss]
             [seesaw.border :as border]
             [seesaw.cursor :as cursor]
+            [seesaw.meta :as meta]
+            [eggshell :as e]
             [eggshell.util :as util]))
 
 
@@ -40,6 +42,16 @@
   (.getCellRect table row col false))
 
 
+(defn cell-at-point [^javax.swing.JTable table point]
+  (cond (instance? java.awt.Point point)
+        [(.rowAtPoint table point)
+         (.columnAtPoint table point)]
+
+        ;;TODO: maybe support [x y]?
+
+        :else
+        nil))
+
 (defn listen-selection [^javax.swing.JTable table f]
   ;;this is to detect column selection changes
   (-> table
@@ -64,6 +76,14 @@
      (for [idx (range (.getColumnCount model))]
        (let [col (.getColumn model idx)]
          (.getWidth col))))))
+
+
+(defn column-width [^javax.swing.JTable table col]
+  (some-> table .getColumnModel (.getColumn col) .getWidth))
+
+
+(defn row-height [^javax.swing.JTable table row]
+  (.getRowHeight table row))
 
 
 (defn stop-editing! [^javax.swing.JTable table]
@@ -128,9 +148,29 @@
         (.setCursor root (cursor/cursor :default))))))
 
 
-(defn- set-row-height [table row-header row height]
+(defn set-column-width [table col width]
+  (-> table .getColumnModel (.getColumn col) (.setPreferredWidth width))
+  (let [widths (meta/get-meta table ::e/col-widths)]
+    (meta/put-meta! table ::e/col-widths (assoc widths col width))))
+
+
+(defn set-column-widths [table pairs]
+  (doseq [[col w] pairs]
+    (set-column-width table col w)))
+
+
+(defn- set-row-height [table row height]
   (.setRowHeight table row height)
-  (.setRowHeight row-header row height))
+  (.setRowHeight (meta/get-meta table ::e/row-header) row height)
+  (let [heights (meta/get-meta table ::e/row-heights)]
+    (meta/put-meta! table ::e/row-heights (assoc heights row height))))
+
+
+(defn set-row-heights [table pairs]
+  (let [header (meta/get-meta table ::e/row-header)]
+    (doseq [[row h] pairs]
+      (.setRowHeight table row h)
+      (.setRowHeight header row h))))
 
 
 (defn- optimal-row-height [table row]
@@ -143,13 +183,13 @@
 
 
 (def fit-row-to-data-monitor (atom nil))
-(defn- fit-row-to-data [table row-header row]
+(defn- fit-row-to-data [table row]
   ;;TODO warn user that this may be late
   (util/cfuture
    (util/unspam
     fit-row-to-data-monitor
     (let [optimal-height (optimal-row-height table row)]
-      (ss/invoke-later (set-row-height table row-header row optimal-height))))))
+      (ss/invoke-later (set-row-height table row optimal-height))))))
 
 
 (defn- fit-all-rows-to-data [table row-header]
@@ -160,7 +200,7 @@
                            (map (partial optimal-row-height table)
                                 (range (min 100 (.getRowCount table)))))]
       (ss/invoke-later (doseq [[row h] (map vector (range) optimal-heights)]
-                         (set-row-height table row-header row h)))))))
+                         (set-row-height table row h)))))))
 
 
 (def fit-column-to-data-monitor (atom nil))
@@ -179,7 +219,7 @@
    (util/unspam
     fit-column-to-data-monitor
     (let [optimal-width (optimal-column-width table col)]
-      (ss/invoke-later (-> table .getColumnModel (.getColumn col) (.setPreferredWidth optimal-width)))))))
+      (ss/invoke-later (set-column-width table col optimal-width))))))
 
 
 (defn- fit-all-columns-to-data [table]
@@ -190,45 +230,48 @@
                           (map (partial optimal-column-width table)
                                (range (min 100 (.getColumnCount table)))))]
       (ss/invoke-later (doseq [[col w] (map vector (range) optimal-widths)]
-                         (-> table .getColumnModel (.getColumn col) (.setPreferredWidth w))))))))
+                         (set-column-width table col w)))))))
 
 
 (defn row-header [^javax.swing.JTable table]
   (let [dragged-start (atom nil)
-        row-index     (atom nil)]
-    (doto (ss/table
-           :enabled? false
-           :model
-           (proxy [javax.swing.table.DefaultTableModel] []
-             (getColumnCount [] 1)
-             (getRowCount [] (.getRowCount table))
-             (isCellEditable [row col] false)
-             (getColumnName [col] "row")
-             (getValueAt [row col] row)
-             (setValueAt [value row col])
-             (getColumnClass [^Integer c] Object))
-           :listen [:mouse-moved    (partial row-header-pointer-handler row-index)
-                    :mouse-exited (fn [_]
-                                    (let [root (javax.swing.SwingUtilities/getRoot table)]
-                                      (.setCursor root (cursor/cursor :default))))
-                    :mouse-pressed  (fn [e]
-                                      (if (and @row-index (= 2 (.getClickCount e)))
-                                        (if (.isShiftDown e)
-                                          (fit-all-rows-to-data table (.getSource e))
-                                          (fit-row-to-data table (.getSource e) @row-index))
-                                        (reset! dragged-start (.getY e))))
-                    :mouse-released (fn [e] (reset! dragged-start nil))
-                    :mouse-dragged  (fn [e]
-                                      (when-let [ds @dragged-start]
-                                        (let [row        @row-index
-                                              d          (- (.getY e) ds)
-                                              new-height (max 20 (+ (.getRowHeight table row) d))]
-                                          (set-row-height table (.getSource e) row new-height)
-                                          (reset! dragged-start (.getY e)))))])
-      (.setRowHeight (.getRowHeight table))
-      (.setDefaultRenderer Object (row-header-renderer table))
-      ;;(.setPreferredSize (java.awt.Dimension. 50 450))
-      )))
+        row-index     (atom nil)
+        header
+        (doto (ss/table
+               :enabled? false
+               :model
+               (proxy [javax.swing.table.DefaultTableModel] []
+                 (getColumnCount [] 1)
+                 (getRowCount [] (.getRowCount table))
+                 (isCellEditable [row col] false)
+                 (getColumnName [col] "row")
+                 (getValueAt [row col] row)
+                 (setValueAt [value row col])
+                 (getColumnClass [^Integer c] Object))
+               :listen [:mouse-moved    (partial row-header-pointer-handler row-index)
+                        :mouse-exited (fn [_]
+                                        (let [root (javax.swing.SwingUtilities/getRoot table)]
+                                          (.setCursor root (cursor/cursor :default))))
+                        :mouse-pressed  (fn [e]
+                                          (if (and @row-index (= 2 (.getClickCount e)))
+                                            (if (.isShiftDown e)
+                                              (fit-all-rows-to-data table (.getSource e))
+                                              (fit-row-to-data table (.getSource e) @row-index))
+                                            (reset! dragged-start (.getY e))))
+                        :mouse-released (fn [e] (reset! dragged-start nil))
+                        :mouse-dragged  (fn [e]
+                                          (when-let [ds @dragged-start]
+                                            (when-let [row @row-index]
+                                              (let [d          (- (.getY e) ds)
+                                                    new-height (max 20 (+ (row-height table row) d))]
+                                                (set-row-height table row new-height)
+                                                (reset! dragged-start (.getY e))))))])
+          (.setRowHeight (.getRowHeight table))
+          (.setDefaultRenderer Object (row-header-renderer table))
+          ;;(.setPreferredSize (java.awt.Dimension. 50 450))
+          )]
+    (meta/put-meta! table ::e/row-header header)
+    header))
 
 
 ;;;;;;;; Column header ;;;;;;;;
@@ -276,6 +319,9 @@
                :mouse-exited (fn [_]
                                (let [root (javax.swing.SwingUtilities/getRoot table)]
                                  (.setCursor root (cursor/cursor :default))))
+               :mouse-released (fn [e] (when-let [col @col-index]
+                                         (let [widths (meta/get-meta table ::e/col-widths)]
+                                           (meta/put-meta! table ::e/col-widths (assoc widths col (column-width table col))))))
                :mouse-pressed (fn [e]
                                 (when (and @col-index (= 2 (.getClickCount e)))
                                   (if (.isShiftDown e)
