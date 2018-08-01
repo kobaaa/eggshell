@@ -99,13 +99,11 @@
 
 
 (defn load-egg [filename {:keys [state-atom]}]
-  (let [{:eggshell/keys [graph aliases deps]} (io/load-egg filename)]
+  (let [{:eggshell/keys [aliases deps] :as egg} (io/load-egg filename)]
     (add-libs! (edn/read-string deps))
     (require-aliases! aliases)
     (reset! state-atom
-            (-> {::e/graph   graph
-                 ::e/deps    deps
-                 ::e/aliases aliases}
+            (-> egg
                 recompile-all
                 (update ::e/graph rakk/recalc))))
   nil)
