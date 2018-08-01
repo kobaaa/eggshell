@@ -2,6 +2,9 @@
 
 A Clojure-driven spreadsheet
 
+Maturity level: early development, works OK for simple cases, no
+releases yet.
+
 ## Shortcut keys
 
 * `F2` to edit cell content in the code editor (at the top of the grid)
