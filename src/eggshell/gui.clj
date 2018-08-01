@@ -120,6 +120,10 @@
                   grid
                   #(ss/invoke-now (do
                                     (.fireTableDataChanged table-model)
+                                    (.fireTableChanged table-model
+                                                       (javax.swing.event.TableModelEvent.
+                                                        table-model
+                                                        javax.swing.event.TableModelEvent/HEADER_ROW))
                                     (grid/apply-row-heights grid-table grid-scroll-pane))))))
 
     ;;listen for cell selection changes to update code editor
@@ -218,11 +222,12 @@
 (defn grid-frame [state-atom]
   (let [cell-setter     (partial controller/set-cell-at! state-atom)
         cell-getter     (partial controller/get-value-at state-atom)
+        dimensions-fn   (partial controller/get-dimensions state-atom)
         editable-getter (partial controller/get-editable-value-at state-atom)
         egg-loader      (fn [file grid]
                           (controller/load-egg file {:state-atom state-atom
                                                      :grid       grid}))
-        layer           (-> (layer/grid cell-getter cell-setter)
+        layer           (-> (layer/grid cell-getter cell-setter dimensions-fn)
                             (layer/image-render)
                             (layer/errors))
         grid            (grid/make-grid layer editable-getter)

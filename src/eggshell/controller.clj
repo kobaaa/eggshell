@@ -109,9 +109,18 @@
   nil)
 
 
+(defn- update-max-row-col [state [row col]]
+  (-> state
+      (update ::e/max-row (fnil max 0) row)
+      (update ::e/max-col (fnil max 0) col)))
+
+
 (defn- set-function-at! [state-atom cell-id [row col] value]
   (let [compiled (compile value (::e/aliases @state-atom) cell-id)]
-    (swap! state-atom update ::e/graph graph/advance {} [compiled])))
+    (swap! state-atom
+           #(-> %
+                (update-max-row-col [row col])
+                (update ::e/graph graph/advance {} [compiled])))))
 
 
 (defn set-cell-at! [state-atom [row col] value]
@@ -119,7 +128,10 @@
     (let [cell-id (graph/coords->id row col)]
       (if (str/starts-with? value "(")
         (set-function-at! state-atom cell-id [row col] value)
-        (swap! state-atom update ::e/graph graph/advance {cell-id (input->value value)} [])))))
+        (swap! state-atom
+               #(-> %
+                    (update-max-row-col [row col])
+                    (update ::e/graph graph/advance {cell-id (input->value value)} [])))))))
 
 
 (defn render-value [x]
@@ -144,6 +156,12 @@
                             (render-value v))
           :cell-id        cell-id}
          (rakk/error-info g cell-id))))))
+
+
+(defn get-dimensions [state-atom]
+  (let [s @state-atom]
+    [(or (::e/max-row s) 0)
+     (or (::e/max-col s) 0)]))
 
 
 (defn get-editable-value-at [state-atom [row col]]

@@ -5,10 +5,9 @@
   (:import [java.awt.image BufferedImage]))
 
 
-(defn pass [{:keys [column-count row-count column-name value set-value! renderer] :as layer-below}]
+(defn pass [{:keys [dimensions column-name value set-value! renderer] :as layer-below}]
   {:type         "pass"
-   :column-count (fn [] (column-count))
-   :row-count    (fn [] (row-count))
+   :dimensions   dimensions
    :column-name  (fn [col] (column-name col))
    :value        (fn [row-col] (value row-col))
    :set-value!   (fn [row-col value] (set-value! row-col value))
@@ -16,11 +15,13 @@
    :config!      (fn [_])})
 
 
-(defn grid [cell-getter cell-setter]
+(defn grid [cell-getter cell-setter dimensions-fn]
   (let [label (ss/label)]
     {:type         "grid"
-     :column-count (constantly 100)
-     :row-count    (constantly 1000)
+     :dimensions   (fn [] (let [[rows cols] (dimensions-fn)]
+                               [(+ 100 rows) (+ 20 cols)]))
+     :column-count (comp second dimensions-fn)
+     :row-count    (comp first dimensions-fn)
      :column-name  (partial graph/idx->column)
      :value        cell-getter
      :set-value!   cell-setter
@@ -65,10 +66,10 @@
                           (renderer row-col v)))})))
 
 
-(defn to-model [{:keys [column-count row-count column-name value set-value!] :as layer}]
+(defn to-model [{:keys [dimensions column-name value set-value!] :as layer}]
   (proxy [javax.swing.table.DefaultTableModel] [] ;;TODO look into using reify
-    (getColumnCount [] (column-count))
-    (getRowCount [] (row-count))
+    (getColumnCount [] (second (dimensions)))
+    (getRowCount [] (first (dimensions)))
     (isCellEditable [row col] true)
     (getColumnName [col] (column-name col))
     (getValueAt [row col] (value [row col]))
