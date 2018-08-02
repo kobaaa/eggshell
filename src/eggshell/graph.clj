@@ -10,12 +10,6 @@
 (defn make [] (loom/digraph))
 
 
-(defn set-value [g cell value]
-  (-> g
-      (rakk/clear-function cell)
-      (rakk/set-value cell value)))
-
-
 (defn value [g cell]
   (rakk/value g cell))
 
@@ -65,13 +59,26 @@
       [(:cell function)])) ;;no-input functions are an extra start themselves
 
 
+(defn clear-functions
+  "Clean eggshell-specific keys of cells"
+  [g cells]
+  (reduce (fn [g cell]
+            (if-not (loom/has-node? g cell)
+              g
+              (-> g
+                  (attr/remove-attr cell ::e/code)
+                  (attr/remove-attr cell ::e/raw-code))))
+          g cells))
+
+
 (defn advance
   ([g new-inputs]
    (advance g new-inputs []))
   ([g new-inputs new-functions]
    (let [g (reduce (fn [g function]
                      (set-function-and-connect g function))
-                   g new-functions)]
+                   g new-functions)
+         g (clear-functions g (keys new-inputs))]
      (rakk/advance g new-inputs (set (mapcat inputs new-functions))))))
 
 
