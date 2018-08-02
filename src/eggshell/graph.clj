@@ -110,14 +110,14 @@
     [(Integer/parseInt row) (col->idx col)]))
 
 
-(defn cell-below [id]
+(defn cell-in-direction [id direction]
   (let [[row col] (id->coords id)]
-    (apply coords->id [(inc row) col])))
-
-
-(defn cell-right [id]
-  (let [[row col] (id->coords id)]
-    (apply coords->id [row (inc col)])))
+    (apply coords->id
+           (condp = direction
+             :up    [(dec row) col]
+             :down  [(inc row) col]
+             :left  [row (dec col)]
+             :right [row (inc col)]))))
 
 
 (defn slice [g id1 id2]

@@ -189,11 +189,12 @@
         nil))))
 
 
-(defn split-result [state-atom {:keys [value dynamic] :as opts}]
+(defn split-result [state-atom {:keys [value dynamic direction] :as opts}]
   (let [{:keys [original-value cell-id]} value
         aliases                          (::e/aliases @state-atom)
         cell-ids                         (take (count original-value)
-                                               (iterate graph/cell-below (graph/cell-below cell-id)))
+                                               (iterate #(graph/cell-in-direction % direction)
+                                                        (graph/cell-in-direction cell-id direction)))
         max-cell                         (graph/id->coords (last cell-ids))]
     (if dynamic
       (let [cell-id (-> cell-id name symbol)]
@@ -203,8 +204,12 @@
                     (update ::e/graph graph/advance {}
                             (->> cell-ids
                                  (map-indexed (fn [idx dest-cell]
-                                                (compile `(nth ~cell-id ~idx) aliases dest-cell))))))))
+                                                (compile `(~'nth ~cell-id ~idx) aliases dest-cell))))))))
       (swap! state-atom
              #(-> %
                   (update-max-row-col max-cell)
                   (update ::e/graph graph/advance (zipmap cell-ids original-value) []))))))
+
+
+;;(map fs/base-name (fs/list-dir "/Users/sideris/Downloads/pub/textures"))
+;;(map (memfn getAbsolutePath) (fs/list-dir "/Users/sideris/Downloads/icons/png/"))

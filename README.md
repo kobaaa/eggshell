@@ -82,6 +82,7 @@ releases yet.
   that reads `java.lang.IllegalArgumentException: Column index out of
   range`.
 - [ ] Bug: Impossible to switch cells out of errored state
+- [ ] Fit column (double click) does not work for strings
 
 ## Done
 
