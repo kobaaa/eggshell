@@ -236,7 +236,7 @@
 (defn apply-row-heights [table]
   (let [v (meta/get-meta table ::e/row-header)]
     (doseq [r (range (.getRowCount table))]
-      (.setRowHeight table r (.getRowHeight v r)))))
+      (.setRowHeight table r (max 1 (.getRowHeight v r))))))
 
 
 (defn apply-column-widths [table]

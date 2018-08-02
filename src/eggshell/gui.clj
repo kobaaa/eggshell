@@ -121,11 +121,13 @@
                  (table/save-selection
                   grid
                   #(ss/invoke-now (do
-                                    (.fireTableDataChanged table-model)
+                                    (.fireTableDataChanged table-model) ;;so that the new data appears
                                     (.fireTableChanged table-model
                                                        (javax.swing.event.TableModelEvent.
                                                         table-model
-                                                        javax.swing.event.TableModelEvent/HEADER_ROW))
+                                                        javax.swing.event.TableModelEvent/HEADER_ROW)) ;;so that new columns appear
+
+                                    ;;sizes are lost after the above events so we need to re-apply them
                                     (table/apply-row-heights grid-table)
                                     (table/apply-column-widths grid-table))))))
 

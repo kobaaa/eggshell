@@ -44,8 +44,11 @@
        (into {})))
 
 
-(defn- compile [string-code aliases cell-id] ;;TODO implement recompile-all based on this and on graph/advance
-  (let [parsed (read-string string-code)]
+(defn- compile [code aliases cell-id] ;;TODO implement recompile-all based on this and on graph/advance
+  (let [string-code (if (string? code) code (pr-str code))
+        parsed      (if (string? code)
+                      (read-string code)
+                      code)]
    (try
      (let [ast (analyze/analyze parsed {:aliases (parse-aliases aliases)})]
        {:cell     cell-id
@@ -188,10 +191,19 @@
 
 (defn split-result [state-atom {:keys [value dynamic] :as opts}]
   (let [{:keys [original-value cell-id]} value
+        aliases                          (::e/aliases @state-atom)
         cell-ids                         (take (count original-value)
                                                (iterate graph/cell-below (graph/cell-below cell-id)))
         max-cell                         (graph/id->coords (last cell-ids))]
-    (if-not dynamic
+    (if dynamic
+      (let [cell-id (-> cell-id name symbol)]
+        (swap! state-atom
+               #(-> %
+                    (update-max-row-col max-cell)
+                    (update ::e/graph graph/advance {}
+                            (->> cell-ids
+                                 (map-indexed (fn [idx dest-cell]
+                                                (compile `(nth ~cell-id ~idx) aliases dest-cell))))))))
       (swap! state-atom
              #(-> %
                   (update-max-row-col max-cell)
