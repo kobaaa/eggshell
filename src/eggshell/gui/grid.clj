@@ -137,12 +137,6 @@
         (draw-focus-box table root-pane g)))))
 
 
-(defn apply-row-heights [table scroll-pane]
-  (let [v (-> scroll-pane .getRowHeader .getView)]
-    (doseq [r (apply range (table/visible-rows v))]
-      (.setRowHeight table r (.getRowHeight v r)))))
-
-
 ;;;;;;;; grid ;;;;;;;;
 
 

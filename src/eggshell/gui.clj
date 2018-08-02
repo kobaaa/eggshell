@@ -126,7 +126,8 @@
                                                        (javax.swing.event.TableModelEvent.
                                                         table-model
                                                         javax.swing.event.TableModelEvent/HEADER_ROW))
-                                    (grid/apply-row-heights grid-table grid-scroll-pane))))))
+                                    (table/apply-row-heights grid-table)
+                                    (table/apply-column-widths grid-table))))))
 
     ;;listen for cell selection changes to update code editor
     (table/listen-selection

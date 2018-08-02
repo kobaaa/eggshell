@@ -233,6 +233,16 @@
                          (set-column-width table col w)))))))
 
 
+(defn apply-row-heights [table]
+  (let [v (meta/get-meta table ::e/row-header)]
+    (doseq [r (range (.getRowCount table))]
+      (.setRowHeight table r (.getRowHeight v r)))))
+
+
+(defn apply-column-widths [table]
+  (set-column-widths table (meta/get-meta table ::e/col-widths)))
+
+
 (defn row-header [^javax.swing.JTable table]
   (let [dragged-start (atom nil)
         row-index     (atom nil)
