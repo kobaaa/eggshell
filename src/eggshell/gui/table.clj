@@ -266,7 +266,7 @@
                                           (if (and @row-index (= 2 (.getClickCount e)))
                                             (if (.isShiftDown e)
                                               (fit-all-rows-to-data table (.getSource e))
-                                              (fit-row-to-data table (.getSource e) @row-index))
+                                              (fit-row-to-data table @row-index))
                                             (reset! dragged-start (.getY e))))
                         :mouse-released (fn [e] (reset! dragged-start nil))
                         :mouse-dragged  (fn [e]
