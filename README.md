@@ -56,7 +56,7 @@ releases yet.
 - [ ] a bit more work on row resize mouse behaviour
 - [ ] re-order columns
 - [ ] render vector and set values with monospaced font in grid
-- [ ] split result (down/right)
+- [x] split result (down/right)
 - [ ] split arrows (down/right)
 - [ ] split let?
 
