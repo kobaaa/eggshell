@@ -262,7 +262,8 @@
      (fn [e]
        (menu/grid-menu
         {:value           (some->> e .getPoint (table/cell-at-point (:table grid)) cell-getter)
-         :split-result-fn (partial controller/split-result state-atom)})))
+         :split-result-fn (partial controller/split-result state-atom)
+         :expand-arrow-fn (partial controller/expand-arrow state-atom)})))
 
     (wire! {:frame            frame
             :state-atom       state-atom

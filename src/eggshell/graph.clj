@@ -25,7 +25,8 @@
 
 
 (defn raw-code [g cell]
-  (attr/attr g cell ::e/raw-code))
+  (when (loom/has-node? g cell)
+    (attr/attr g cell ::e/raw-code)))
 
 
 (defn incoming-edges [g cell]

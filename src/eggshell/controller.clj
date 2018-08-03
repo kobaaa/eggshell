@@ -166,7 +166,8 @@
           :render-value   (if (rakk/error? g cell-id)
                             "ERROR!"
                             (render-value v))
-          :cell-id        cell-id}
+          :cell-id        cell-id
+          :raw-code       (graph/raw-code g cell-id)}
          (rakk/error-info g cell-id))))))
 
 
@@ -189,7 +190,7 @@
         nil))))
 
 
-(defn split-result [state-atom {:keys [value dynamic direction] :as opts}]
+(defn split-result [state-atom {:keys [value dynamic direction]}]
   (let [{:keys [original-value cell-id]} value
         aliases                          (::e/aliases @state-atom)
         cell-ids                         (take (count original-value)
@@ -213,3 +214,49 @@
 
 ;;(map fs/base-name (fs/list-dir "/Users/sideris/Downloads/pub/textures"))
 ;;(map (memfn getAbsolutePath) (fs/list-dir "/Users/sideris/Downloads/icons/png/"))
+
+
+;;;; Split arrows ;;;;
+
+(defn- ->symbols [kws]
+  (map (comp symbol name) kws))
+
+(defn- insert-at-1 [coll item]
+  (cons (first coll) (cons item (rest coll))))
+
+(defn- ensure-lists [code]
+  (map #(if (list? %) % (list %)) code))
+
+(defn- split-> [code cell-ids]
+  (concat [(second code)]
+          (map (fn [exp cell]
+                 (insert-at-1 exp cell))
+               (ensure-lists (drop 2 code))
+               (->symbols cell-ids))))
+
+(defn- split->> [code cell-ids]
+  (concat [(second code)]
+          (map (fn [exp cell]
+                 (apply list (concat exp [cell])))
+               (ensure-lists (drop 2 code))
+               (->symbols cell-ids))))
+
+(defn expand-arrow [state-atom {:keys [value direction]}]
+  (let [aliases                    (::e/aliases @state-atom)
+        {:keys [raw-code cell-id]} value
+        code                       (read-string raw-code)
+        cell-ids                   (take (dec (count code))
+                                         (iterate #(graph/cell-in-direction % direction) cell-id))
+        max-cell                   (graph/id->coords (last cell-ids))
+        new-code                   (condp = (first code)
+                                     '-> (split-> code cell-ids)
+                                     '->> (split->> code cell-ids))]
+    (swap! state-atom
+           (fn [state]
+             (-> state
+                 (update-max-row-col max-cell)
+                 (update ::e/graph graph/advance {}
+                         (map #(compile %2 aliases %1) cell-ids new-code)))))))
+
+
+;;(->> (identity a4) (filter odd?) (map inc) (map #(* % 2)))
