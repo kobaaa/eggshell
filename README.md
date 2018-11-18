@@ -39,7 +39,7 @@ releases yet.
 ## TODO (polish)
 
 - [ ] user-visible logging
-- [x] remember cursor position in code editor after hitting <enter>
+- [x] remember cursor position in code editor after hitting `enter`
 - [ ] freeze rows and show as header
 - [ ] select whole column/row
 - [ ] select multiple columns/rows by clicking and dragging in the headers
@@ -77,8 +77,8 @@ releases yet.
 - [x] Bug: Cells without deps (such as `(+ 1 2)`) don't get calculated
 - [ ] Bug: Fix calculations happening on the swing thread
 - [ ] Bug: Fix save/load after state refactoring
-- [ ] Bug: Try editing some multi-line code and hitting <enter>. The whole
-  grid flickers. If you hold <enter> you hit a concurrency exception
+- [ ] Bug: Try editing some multi-line code and hitting `enter`. The whole
+  grid flickers. If you hold `enter` you hit a concurrency exception
   that reads `java.lang.IllegalArgumentException: Column index out of
   range`.
 - [ ] Bug: Impossible to switch cells out of errored state
