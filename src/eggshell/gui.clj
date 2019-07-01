@@ -145,6 +145,9 @@
                       (table/stop-editing! grid)
                       (ss/request-focus! code-editor)))
 
+    (keymap/map-key grid "DELETE"
+                    (fn [_]
+                      (cell-setter (table/selected-cell grid) "")))
 
     (keymap/map-key code-editor "ESCAPE"
                     (fn [_]
