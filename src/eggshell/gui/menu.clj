@@ -41,12 +41,12 @@
        (concat
         [(ss/menu-item :text "Copy"
                        :listen [:action (fn [_]
-                                          (cb/copy-to-buffer  (str original-value))
-                                          (reset! cb/app-buffer value))])
+                                          (cb/copy-to-buffer (str original-value))
+                                          (cb/set-app-buffer value))])
          (ss/menu-item :text "Paste Value"
-                       :listen [:action (fn [_] (set-cell-fn (:original-value @cb/app-buffer)))])
+                       :listen [:action (fn [_] (set-cell-fn (cb/value-from-app-buffer)))])
          (ss/menu-item :text "Paste Formula"
-                       :listen [:action (fn [_] (set-cell-fn (:raw-code @cb/app-buffer)))])
+                       :listen [:action (fn [_] (set-cell-fn (cb/code-from-app-buffer)))])
          (ss/separator)
          (ss/menu-item :text "Paste from Clipboard"
                        :listen [:action (fn [_] (set-cell-fn (cb/get-from-buffer)))])]
