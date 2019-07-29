@@ -59,8 +59,4 @@
            (ss/menu-item :text (str "Expand " arrow " down")
                          :listen [:action (fn [_] (cfuture (expand-arrow-fn (assoc opts :direction :down))))])
            (ss/menu-item :text (str "Expand " arrow " right")
-                         :listen [:action (fn [_] (cfuture (expand-arrow-fn (assoc opts :direction
-
-                                                                                   :right))))])]))))))
-
-
+                         :listen [:action (fn [_] (cfuture (expand-arrow-fn (assoc opts :direction :right))))])]))))))
